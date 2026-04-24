@@ -13,13 +13,11 @@ return new class extends Migration
     {
         Schema::create('property_locations', function (Blueprint $table) {
             $table->id();
-            $table->integer('property_id');
-            $table->decimal('latitude', 10, 8);
-            $table->decimal('longitude', 11, 8);
+            $table->foreignId('property_id')->unique()->constrained('properties')->cascadeOnDelete();
+            $table->decimal('location_lat', 10, 7);
+            $table->decimal('location_lng', 10, 7);
             $table->string('address')->nullable();
             $table->timestamps();
-
-            $table->foreign('property_id')->references('id')->on('properties')->onDelete('cascade');
         });
     }
 

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name'); // e.g., "free", "Premium"
             $table->decimal('price', 10, 2);
             $table->integer('duration_days');
-            $table->integer('max_lisitng');
+            $table->integer('max_listing');
             $table->integer('max_images');
            
             $table->timestamps();

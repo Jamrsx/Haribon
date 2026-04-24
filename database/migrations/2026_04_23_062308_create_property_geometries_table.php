@@ -13,12 +13,10 @@ return new class extends Migration
     {
         Schema::create('property_geometries', function (Blueprint $table) {
             $table->id();
-            $table->integer('property_id');
-            $table->string('type');
-            $table->jsonb('coordinates');
+            $table->foreignId('property_id')->unique()->constrained('properties')->cascadeOnDelete();
+            $table->json('lot_polygon')->nullable();
+            $table->decimal('lot_area_sqm', 12, 2)->nullable();
             $table->timestamps();
-            
-            $table->foreign('property_id')->references('id')->on('properties')->onDelete('cascade');
         });
     }
 
