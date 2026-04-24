@@ -61,6 +61,23 @@ This project has domain-specific skills available. You MUST activate the relevan
 
 - Be concise in your explanations - focus on what's important rather than explaining obvious details.
 
+## UI Design Preference (Project-Specific)
+
+- Always design pages with a sleek, clean, and professional look.
+- Prioritize clarity first: clear visual hierarchy, readable typography, consistent spacing, and focused CTAs.
+- Keep layouts uncluttered and modern; avoid decorative noise and unnecessary effects.
+- Use solid colors only. Do not use gradient backgrounds, gradient text, or gradient buttons.
+- Use mobile-first responsive patterns and preserve accessibility (contrast, keyboard focus states, semantic structure).
+- Maintain consistent component styling across all pages (cards, forms, buttons, navbar, modal, dropdowns).
+- Keep button and action styling aligned with the project's green brand direction.
+- Follow HCI principles throughout implementation:
+  - Shneiderman’s Eight Golden Rules (consistency, informative feedback, error prevention, user control).
+  - Nielsen’s Ten Heuristics (visibility of status, match with real world, recognition over recall, recovery from errors).
+  - Norman’s Principles (affordance, signifiers, constraints, mapping, feedback).
+- Apply structural/display rules: avoid clutter, align elements clearly, establish visual importance, and keep responsive behavior across devices.
+- Apply interaction/accessibility rules: clear labels, strong visual cues, keyboard-friendly interactions, alt text when needed, and WCAG-aligned contrast/readability.
+- Use iterative UI refinement: prototype, test quickly, gather feedback, and improve.
+
 === boost rules ===
 
 # Laravel Boost
