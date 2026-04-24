@@ -8,6 +8,9 @@
     "sail": false,
     "skills": [
         "laravel-best-practices",
-        "pest-testing"
+        "passport-development",
+        "pest-testing",
+        "inertia-react-development",
+        "tailwindcss-development"
     ]
 }
