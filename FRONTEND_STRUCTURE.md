@@ -1,271 +1,215 @@
-# Haribon Frontend Structure Guide
+# Haribon Frontend Structure Guide (Updated)
 
-This document defines the purpose and expected behavior of each page and component in the system.
+This document reflects the current project status and the agreed target structure.
 
 Stack:
-- Laravel (backend)
-- Inertia.js (routing bridge)
-- React (frontend)
+- Laravel 13
+- Inertia.js (Laravel adapter v3)
+- React (via `@inertiajs/react`)
+- Tailwind CSS v4 + Vite
 
 ---
 
-# 📄 PAGES
+# Current Status Snapshot
 
-## 🌐 Public Pages
+Implemented now:
+- Inertia root view is configured in `resources/views/app.blade.php`
+- Inertia middleware is configured in `app/Http/Middleware/HandleInertiaRequests.php`
+- React entry is `resources/js/app.jsx`
+- Vite is configured for React + Tailwind in `vite.config.js`
+- Current default route in `routes/web.php` points to an Inertia page
 
-### HomePage.jsx
+In progress / placeholders:
+- Most page files under `resources/js/Pages/**` exist but are empty
+- Route mapping for the complete page tree is not yet implemented
+- Shared layouts and reusable UI/components are not yet implemented
+
+---
+
+# Route-to-Page Plan (Target)
+
+## Public
+- `/` -> `Public/HomePage`
+- `/properties` -> `Public/PropertyBrowsePage`
+- `/properties/search` -> `Public/PropertySearchPage`
+- `/properties/{property}` -> `Public/PropertyDetailsPage`
+
+## Auth
+- `/login` -> `Auth/LoginPage`
+- `/register` -> `Auth/RegisterPage`
+
+## Seller
+- `/seller/dashboard` -> `Seller/SellerDashboardPage`
+- `/seller/properties` -> `Seller/PropertyListPage`
+- `/seller/properties/create` -> `Seller/CreatePropertyPage`
+- `/seller/properties/{property}/edit` -> `Seller/EditPropertyPage`
+- `/seller/subscription` -> `Seller/SubscriptionOverviewPage`
+- `/seller/subscription/plans` -> `Seller/SubscriptionPlansPage`
+- `/seller/subscription/success` -> `Seller/SubscriptionSuccessPage`
+
+## Buyer (optional account-based feature)
+- `/buyer/favorites` -> `Buyer/FavoritePropertiesPage`
+
+---
+
+# Pages and Responsibilities
+
+## Public Pages
+
+### `Public/HomePage.jsx`
 - Landing page
-- Shows featured properties
-- Basic search input
-- CTA for sellers to list property
+- Featured properties
+- Basic search CTA
+- Seller CTA ("List your property")
+
+### `Public/PropertyBrowsePage.jsx`
+- Property list/grid
+- Pagination
+- Basic filters (price, lot area, location)
+
+### `Public/PropertyDetailsPage.jsx`
+- Full property details
+- Image gallery
+- Location marker and lot polygon preview map
+- Seller contact info
+
+### `Public/PropertySearchPage.jsx`
+- Advanced search + map-based search
+- Filter panel + map viewport interactions
+
+## Auth Pages
+
+### `Auth/LoginPage.jsx`
+- Email + password login
+- Error and validation feedback
+
+### `Auth/RegisterPage.jsx`
+- Registration with explicit role selection (Buyer / Seller)
+- Phone, email, password confirmation
+
+## Seller Pages
+
+### `Seller/SellerDashboardPage.jsx`
+- Total listings
+- Subscription status
+- Quick actions
+
+### `Seller/PropertyListPage.jsx`
+- Seller-owned properties
+- Edit/delete actions
+- Status badge (active/inactive)
+
+### `Seller/CreatePropertyPage.jsx`
+- Property creation form
+- Image upload
+- Map location picker
+- Polygon drawing for lot boundary
+
+### `Seller/EditPropertyPage.jsx`
+- Same form as create page, prefilled values
+- Update location/polygon/images
+
+### `Seller/SubscriptionOverviewPage.jsx`
+- Active/expired status
+- Current plan and expiration
+
+### `Seller/SubscriptionPlansPage.jsx`
+- List available plans
+- Trigger payment checkout (PayMongo in final phase)
+
+### `Seller/SubscriptionSuccessPage.jsx`
+- Payment success confirmation
+- Redirect action to dashboard/subscription page
+
+## Buyer Pages
+
+### `Buyer/FavoritePropertiesPage.jsx`
+- Saved properties list (optional, account-based)
 
 ---
 
-### PropertyBrowsePage.jsx
-- Displays list/grid of all properties
-- Supports pagination
-- Basic filtering (price, size, etc.)
+# Shared Data Contract (Property + Map)
+
+Use these field names consistently across frontend forms, Inertia props, validation, and DB:
+
+- `location_lat` (number)
+- `location_lng` (number)
+- `lot_polygon` (array of `{ lat, lng }`)
+- `lot_area_sqm` (number, nullable)
+- `price_total` (number)
+- `price_per_sqm` (number)
+
+Notes:
+- `lot_polygon` is nullable when seller only provides a marker.
+- `lot_area_sqm` can be manual or computed from polygon.
 
 ---
 
-### PropertyDetailsPage.jsx
-- Shows full property information:
-  - Title
-  - Description
-  - Images
-  - Lot size
-  - Price per sqm
-  - Contact number
-- Displays map (pin or polygon)
+# Components to Implement
+
+## Layouts
+- `Layouts/MainLayout.jsx` (public pages)
+- `Layouts/AuthLayout.jsx` (login/register)
+- `Layouts/DashboardLayout.jsx` (seller pages)
+
+## Reusable UI
+- `Components/UI/Button.jsx`
+- `Components/UI/Input.jsx`
+- `Components/UI/Modal.jsx`
+
+Modal rule:
+- Use this class on modal overlay:
+  - `bg-clear bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50`
+
+## Property
+- `Components/Property/PropertyCard.jsx`
+- `Components/Property/PropertyForm.jsx`
+- `Components/Property/PropertyImagesUpload.jsx`
+- `Components/Property/PropertyMapView.jsx`
+
+## Map
+- `Components/Map/MapPicker.jsx`
+- `Components/Map/PolygonDrawingTool.jsx`
+
+## Subscription
+- `Components/Subscription/SubscriptionPlanCard.jsx`
 
 ---
 
-### PropertySearchPage.jsx
-- Advanced search page
-- Includes:
-  - Filters
-  - Map-based search
-- Can reuse PropertyCard component
+# Suggested Directory Structure
+
+`resources/js/`
+- `Pages/Public/*`
+- `Pages/Auth/*`
+- `Pages/Seller/*`
+- `Pages/Buyer/*`
+- `Components/UI/*`
+- `Components/Layouts/*`
+- `Components/Property/*`
+- `Components/Map/*`
+- `Components/Subscription/*`
+- `Hooks/*`
+- `Utils/*`
+- `Types/property.js` (or `Types/property.ts` later)
 
 ---
 
-## 🔐 Auth Pages
+# Development Notes
 
-### LoginPage.jsx
-- Email + password login form
-- Handles authentication
-
----
-
-### RegisterPage.jsx
-- User registration
-- Must include role selection:
-  - Buyer
-  - Seller
+- Keep pages thin; move reusable UI/business blocks to components/hooks.
+- Keep naming consistent with route and page responsibility.
+- Add validation messages and user alerts where needed.
+- Keep console logs during development for testing visibility.
+- Build mobile-responsive UI first and preserve accessibility.
+- Use Inertia page routing; avoid direct Blade page rendering for app pages.
 
 ---
 
-## 👤 Seller Pages
+# Future Extensions
 
-### SellerDashboardPage.jsx
-- Overview page
-- Shows:
-  - Total listings
-  - Subscription status
-  - Quick actions (add property)
-
----
-
-### PropertyListPage.jsx
-- Lists all properties created by seller
-- Actions:
-  - Edit
-  - Delete
-
----
-
-### CreatePropertyPage.jsx
-- Form to create a property
-- Uses:
-  - PropertyForm
-  - PropertyImagesUpload
-  - MapPicker / PolygonDrawingTool
-
----
-
-### EditPropertyPage.jsx
-- Same as CreatePropertyPage
-- Pre-filled with existing data
-
----
-
-### SubscriptionOverviewPage.jsx
-- Shows current subscription
-- Status (active / expired)
-- Expiration date
-
----
-
-### SubscriptionPlansPage.jsx
-- Lists available plans
-- Uses SubscriptionPlanCard
-- Button to trigger payment (PayMongo)
-
----
-
-### SubscriptionSuccessPage.jsx
-- Shown after successful payment
-- Confirms upgrade
-- Redirect to dashboard
-
----
-
-## 👤 Buyer Pages
-
-### FavoritePropertiesPage.jsx
-- Displays saved properties (optional feature)
-
----
-
-# 🧩 COMPONENTS
-
-## 🎨 UI Components
-
-### Button.jsx
-- Reusable button
-- Supports variants (primary, secondary)
-
----
-
-### Input.jsx
-- Reusable input field
-- Supports validation display
-
----
-
-### Modal.jsx
-- Popup container
-- Used for confirmations or forms
-
----
-
-## 🧱 Layout Components
-
-### MainLayout.jsx
-- Used for public pages
-- Includes:
-  - Navbar
-  - Footer
-
----
-
-### AuthLayout.jsx
-- Used for login/register
-- Minimal layout
-
----
-
-### DashboardLayout.jsx
-- Used for seller pages
-- Includes:
-  - Sidebar
-  - Header
-
----
-
-## 🏡 Property Components
-
-### PropertyCard.jsx
-- Displays property preview:
-  - Image
-  - Title
-  - Price
-- Used in listings
-
----
-
-### PropertyForm.jsx
-- Main form logic for property
-- Handles:
-  - Title
-  - Description
-  - Price
-  - Lot size
-  - Contact number
-
----
-
-### PropertyImagesUpload.jsx
-- Handles multiple image uploads
-- Preview images before saving
-
----
-
-### PropertyMapView.jsx
-- Displays property location
-- Supports:
-  - Marker
-  - Polygon rendering
-
----
-
-## 🗺️ Map Components
-
-### MapPicker.jsx
-- Allows user to select a location
-- Returns lat/lng
-
----
-
-### PolygonDrawingTool.jsx
-- Allows drawing area on map
-- Returns polygon coordinates
-
----
-
-## 💳 Subscription Components
-
-### SubscriptionPlanCard.jsx
-- Displays plan details:
-  - Price
-  - Duration
-  - Features
-- Button to select plan
-
----
-
-# 📁 OTHER DIRECTORIES
-
-## Hooks/
-- Custom React hooks
-- Example:
-  - useAuth
-  - useMap
-
----
-
-## Utils/
-- Helper functions
-- Example:
-  - formatPrice
-  - calculateSubscriptionStatus
-
----
-
-# 🧠 DEVELOPMENT NOTES
-
-- Keep components reusable
-- Keep pages thin (logic inside components)
-- Use Inertia for page routing
-- Avoid mixing UI and business logic
-
----
-
-# 🚀 FUTURE EXTENSIONS
-
-- Chat system
-- Admin panel
-- Analytics dashboard
-- Property verification system
+- PayMongo membership checkout flow (6-month and 1-year plans)
+- Chat between buyer and seller
+- Admin moderation and verification workflow
+- Property analytics dashboard
 
 ---
