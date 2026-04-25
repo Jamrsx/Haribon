@@ -29,9 +29,9 @@ class LoginUserController extends Controller
         $isSeller = $user->roles->contains('name', 'seller');
 
         if ($isSeller) {
-            return redirect()->route('seller.dashboard');
+            return redirect()->route('seller.dashboard')->with('loginSuccess', $user->name);
         }
 
-        return redirect()->route('buyer.favorites');
+        return redirect()->route('buyer.favorites')->with('loginSuccess', $user->name);
     }
 }
