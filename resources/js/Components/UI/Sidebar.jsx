@@ -159,9 +159,11 @@ export default function Sidebar({ collapsed, onToggle }) {
                         onClick={() => setShowAccountMenu((prev) => !prev)}
                         className="flex min-h-12 w-full items-center rounded-lg border border-slate-700 bg-slate-800 p-2 text-left hover:bg-slate-700"
                     >
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">
-                            {userInitial}
-                        </span>
+                        <img
+                            src="/storage/Hari/haribon-smile.png"
+                            alt="Profile"
+                            className="h-8 w-8 rounded-full object-cover"
+                        />
                         {!collapsed ? (
                             <span className="ml-2 min-w-0 leading-tight">
                                 <span className="block truncate text-sm font-medium text-white">{user?.name ?? 'Profile'}</span>

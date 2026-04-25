@@ -92,6 +92,38 @@ export default function ProfilePage() {
                 onClose={() => setToast((prev) => ({ ...prev, show: false }))}
             />
             <section className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+                {/* Profile Header */}
+                <div className="mb-8 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-8 shadow-lg">
+                    <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-6">
+                        <div className="relative">
+                            <img
+                                src="/storage/Hari/haribon-smile.png"
+                                alt="Profile"
+                                className="h-24 w-24 rounded-full border-4 border-white object-cover shadow-lg sm:h-32 sm:w-32"
+                            />
+                            <div className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-white border-2 border-emerald-500 flex items-center justify-center shadow-md">
+                                <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div className="text-center sm:text-left">
+                            <h1 className="text-2xl font-bold text-white sm:text-3xl">{user?.name ?? 'User'}</h1>
+                            <p className="mt-1 text-emerald-100">{user?.email ?? ''}</p>
+                            <div className="mt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
+                                {isSeller && (
+                                    <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+                                        <svg className="mr-1.5 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Seller
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div className="grid gap-5 lg:grid-cols-2">
                     <form onSubmit={handleUpdateInfo} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
                         <h2 className="text-lg font-semibold text-slate-900">Update Information</h2>
