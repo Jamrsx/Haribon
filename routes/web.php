@@ -4,12 +4,13 @@ use App\Http\Controllers\Auth\LoginUserController;
 use App\Http\Controllers\Auth\LogoutUserController;
 use App\Http\Controllers\Auth\RegisterUserController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PropertyController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Public/HomePage');
-});
+Route::get('/', [PropertyController::class, 'publicIndex'])->name('home');
+
+Route::get('/properties/{property}', [PropertyController::class, 'show'])->name('properties.show');
 
 Route::get('/register', function () {
     return Inertia::render('Auth/RegisterPage');
@@ -32,21 +33,33 @@ Route::get('/profile', [ProfileController::class, 'show'])->middleware('auth')->
 Route::patch('/profile', [ProfileController::class, 'updateInfo'])->middleware('auth')->name('profile.update');
 Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->middleware('auth')->name('profile.password');
 
-Route::get('/seller/dashboard', function () {
-    return Inertia::render('Seller/SellerDashboardPage');
-})->middleware('seller')->name('seller.dashboard');
+Route::get('/seller/dashboard', [PropertyController::class, 'dashboard'])
+    ->middleware('seller')
+    ->name('seller.dashboard');
 
-Route::get('/seller/properties', function () {
-    return Inertia::render('Seller/PropertyListPage');
-})->middleware('seller')->name('seller.properties.index');
+Route::get('/seller/properties', [PropertyController::class, 'index'])
+    ->middleware('seller')
+    ->name('seller.properties.index');
 
-Route::get('/seller/properties/create', function () {
-    return Inertia::render('Seller/CreatePropertyPage');
-})->middleware('seller')->name('seller.properties.create');
+Route::get('/seller/properties/create', [PropertyController::class, 'create'])
+    ->middleware('seller')
+    ->name('seller.properties.create');
 
-Route::get('/seller/properties/{property}/edit', function () {
-    return Inertia::render('Seller/EditPropertyPage');
-})->middleware('seller')->name('seller.properties.edit');
+Route::post('/seller/properties', [PropertyController::class, 'store'])
+    ->middleware('seller')
+    ->name('seller.properties.store');
+
+Route::get('/seller/properties/{property}/edit', [PropertyController::class, 'edit'])
+    ->middleware('seller')
+    ->name('seller.properties.edit');
+
+Route::put('/seller/properties/{property}', [PropertyController::class, 'update'])
+    ->middleware('seller')
+    ->name('seller.properties.update');
+
+Route::delete('/seller/properties/{property}', [PropertyController::class, 'destroy'])
+    ->middleware('seller')
+    ->name('seller.properties.destroy');
 
 Route::get('/seller/subscription', function () {
     return Inertia::render('Seller/SubscriptionOverviewPage');

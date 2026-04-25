@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('title');
             $table->text('description')->nullable();
+            $table->string('contact');
             $table->decimal('lot_area_sqm', 12, 2)->nullable();
             $table->decimal('price_total', 15, 2);
             $table->decimal('price_per_sqm', 15, 2);
