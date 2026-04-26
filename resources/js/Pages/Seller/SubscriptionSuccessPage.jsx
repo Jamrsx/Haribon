@@ -1,8 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import DashboardLayout from '../../Layouts/DashboardLayout';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 
 export default function SubscriptionSuccessPage() {
+    useEffect(() => {
+        const redirectTimer = setTimeout(() => {
+            router.visit('/seller/subscription');
+        }, 3000);
+
+        return () => {
+            clearTimeout(redirectTimer);
+        };
+    }, []);
+
     return (
         <DashboardLayout title="Subscription Success">
             <div className="max-w-2xl mx-auto">
@@ -19,6 +29,9 @@ export default function SubscriptionSuccessPage() {
                     <div className="mt-6 bg-emerald-50 rounded-lg p-4">
                         <p className="text-sm text-emerald-800">
                             You can now enjoy premium features including unlimited property listings and images.
+                        </p>
+                        <p className="mt-2 text-xs text-emerald-700">
+                            Redirecting to your subscription details in 3 seconds...
                         </p>
                     </div>
                     <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
