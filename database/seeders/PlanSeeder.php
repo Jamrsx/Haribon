@@ -27,8 +27,8 @@ class PlanSeeder extends Seeder
             'name' => '6 Months',
             'price' => 5.00,
             'duration_days' => 180,
-            'max_listing' => 999,
-            'max_images' => 999,
+            'max_listing' => 10,
+            'max_images' => 20,
         ]);
 
         Plan::create([

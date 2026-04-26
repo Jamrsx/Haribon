@@ -101,7 +101,7 @@ export default function RegisterPage() {
     };
 
     return (
-        <AuthLayout title="Create your account" subtitle="Register as a seller or buyer to continue.">
+        <AuthLayout title="Create your account" subtitle="Register as a seller to start listing your properties.">
             <Head title="Register" />
             <Toast
                 show={toast.show}
@@ -109,6 +109,20 @@ export default function RegisterPage() {
                 message={toast.message}
                 onClose={() => setToast((prev) => ({ ...prev, show: false }))}
             />
+
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 mb-6">
+                <div className="flex items-start gap-3">
+                    <svg className="mt-0.5 h-5 w-5 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div>
+                        <p className="text-sm font-medium text-blue-900">Seller Account Benefits</p>
+                        <p className="mt-1 text-sm text-blue-800">
+                            Start with 1 free property listing. Upgrade to 6 months (10 listings) or 1 year (unlimited listings) for more features.
+                        </p>
+                    </div>
+                </div>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -172,29 +186,6 @@ export default function RegisterPage() {
                         required
                     />
                     {errors.phone ? <p className="mt-1 text-xs text-rose-600">{errors.phone}</p> : null}
-                </div>
-
-                <div>
-                    <label htmlFor="role" className="mb-1 block text-sm font-medium text-slate-700">
-                        <span className="inline-flex items-center gap-2">
-                            <svg viewBox="0 0 24 24" className="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M12 3l8 4-8 4-8-4 8-4z" />
-                                <path d="M4 12l8 4 8-4" />
-                                <path d="M4 17l8 4 8-4" />
-                            </svg>
-                            Account Role
-                        </span>
-                    </label>
-                    <select
-                        id="role"
-                        value={data.role}
-                        onChange={(e) => setData('role', e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
-                    >
-                        <option value="seller">Seller</option>
-                        <option value="buyer">Buyer</option>
-                    </select>
-                    {errors.role ? <p className="mt-1 text-xs text-rose-600">{errors.role}</p> : null}
                 </div>
 
                 <div>
