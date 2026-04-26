@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Property;
-use App\Models\PropertyLocation;
 use App\Models\PropertyGeometry;
 use App\Models\PropertyImage;
+use App\Models\PropertyLocation;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -15,7 +15,7 @@ class PropertyController extends Controller
     public function create(Request $request)
     {
         $user = $request->user();
-        
+
         // Get user's latest ACTIVE subscription (free or paid)
         $subscription = $user->subscriptions()
             ->where('status', 'active')
@@ -44,7 +44,7 @@ class PropertyController extends Controller
     {
         // Check subscription limits
         $user = $request->user();
-        
+
         // Get user's latest ACTIVE subscription (free or paid)
         $subscription = $user->subscriptions()
             ->where('status', 'active')
@@ -258,13 +258,13 @@ class PropertyController extends Controller
 
     public function show(Request $request, Property $property)
     {
-        if (!$property->is_active) {
+        if (! $property->is_active) {
             abort(404);
         }
 
         $property->load(['images', 'location', 'user']);
 
-        return inertia('Public/PropertyDetailPage', [
+        return inertia('Public/PropertyDetailsPage', [
             'property' => $property,
         ]);
     }

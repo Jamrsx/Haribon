@@ -132,37 +132,71 @@ export default function HomePage() {
             <Head title="Haribon | Find Your Next Property" />
             <Header />
             <main className="flex-1">
-                <section className="bg-slate-50">
-                    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-                        <div className="max-w-2xl">
-                            <p className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
-                                Real Estate Marketplace
+                <section className="border-b border-slate-200 bg-white">
+                    <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.2fr,0.8fr] lg:items-center lg:px-8 lg:py-14">
+                        <div>
+                            <p className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                                Haribon Real Estate Marketplace
                             </p>
-                            <h1 className="mt-3 text-2xl font-semibold leading-tight text-slate-900 sm:text-3xl">
-                                Discover lots and properties with confidence
+                            <h1 className="mt-4 text-3xl font-bold leading-tight text-slate-900 sm:text-4xl lg:text-5xl">
+                                Find your next property with clarity and confidence
                             </h1>
-                            <p className="mt-2 text-sm text-slate-600">
-                                Browse listings as a buyer without login, or sign up as a seller to publish your property.
+                            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
+                                Explore verified listings, compare prices quickly, and use map-based discovery to find the best property for your needs.
                             </p>
+                            <div className="mt-6 flex flex-wrap gap-3">
+                                <button
+                                    onClick={handleNearMe}
+                                    disabled={loadingNearMe}
+                                    className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                                >
+                                    {loadingNearMe ? 'Locating...' : 'Find Near Me'}
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('map')}
+                                    className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                                >
+                                    Explore on Map
+                                </button>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:gap-4 sm:p-5">
+                            <div className="rounded-xl border border-slate-200 bg-white p-4">
+                                <p className="text-xs text-slate-500">Available Listings</p>
+                                <p className="mt-1 text-2xl font-bold text-slate-900">{properties.length}</p>
+                            </div>
+                            <div className="rounded-xl border border-slate-200 bg-white p-4">
+                                <p className="text-xs text-slate-500">Map Discovery</p>
+                                <p className="mt-1 text-2xl font-bold text-emerald-700">Live</p>
+                            </div>
+                            <div className="rounded-xl border border-slate-200 bg-white p-4">
+                                <p className="text-xs text-slate-500">Buyer Access</p>
+                                <p className="mt-1 text-sm font-semibold text-slate-900">No login required</p>
+                            </div>
+                            <div className="rounded-xl border border-slate-200 bg-white p-4">
+                                <p className="text-xs text-slate-500">Seller Publishing</p>
+                                <p className="mt-1 text-sm font-semibold text-slate-900">Fast and simple</p>
+                            </div>
                         </div>
                     </div>
                 </section>
 
                 <section className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <h2 className="text-lg font-semibold text-slate-900">
+                            <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
                                 {properties.length} {properties.length === 1 ? 'Property' : 'Properties'}
                             </h2>
                             {userLocation && (
-                                <p className="text-xs text-slate-500">Showing within {radius} km of your location</p>
+                                <p className="text-xs text-slate-500 sm:text-sm">Showing within {radius} km of your location</p>
                             )}
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
                             {userLocation && (
                                 <button
                                     onClick={handleShowAll}
-                                    className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                                    className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
                                 >
                                     Show All
                                 </button>
@@ -170,11 +204,11 @@ export default function HomePage() {
                             <button
                                 onClick={handleNearMe}
                                 disabled={loadingNearMe}
-                                className="rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                                className="rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700 disabled:opacity-50"
                             >
                                 {loadingNearMe ? 'Locating...' : 'Near Me'}
                             </button>
-                            <div className="flex items-center rounded-lg border border-slate-200 bg-white">
+                            <div className="flex items-center overflow-hidden rounded-lg border border-slate-200 bg-white">
                                 <button
                                     onClick={() => setViewMode('list')}
                                     className={`px-3 py-1.5 text-xs font-medium ${
@@ -198,6 +232,7 @@ export default function HomePage() {
                             </div>
                         </div>
                     </div>
+                    </div>
 
                     {viewMode === 'list' ? (
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -205,9 +240,9 @@ export default function HomePage() {
                                 <div
                                     key={property.id}
                                     onClick={() => setSelectedProperty(property)}
-                                    className="group cursor-pointer rounded-lg border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md"
+                                    className="group cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                                 >
-                                    <div className="relative aspect-square overflow-hidden rounded-t-lg bg-slate-100">
+                                    <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
                                         {property.images && property.images.length > 0 ? (
                                             <img
                                                 src={`/storage/${property.images[0].image_path}`}
@@ -215,38 +250,50 @@ export default function HomePage() {
                                                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                             />
                                         ) : (
-                                            <div className="flex h-full w-full items-center justify-center">
+                                            <div className="flex h-full w-full items-center justify-center bg-slate-100">
                                                 <svg className="h-8 w-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                 </svg>
                                             </div>
                                         )}
+                                        <div className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-semibold text-slate-700">
+                                            {property.lot_area_sqm ? `${property.lot_area_sqm} sqm` : 'Lot Property'}
+                                        </div>
                                     </div>
-                                    <div className="p-3">
-                                        <h3 className="line-clamp-1 text-sm font-medium text-slate-900 group-hover:text-emerald-700">
+                                    <div className="space-y-2 p-4">
+                                        <h3 className="line-clamp-1 text-sm font-semibold text-slate-900 group-hover:text-emerald-700">
                                             {property.title}
                                         </h3>
-                                        <div className="mt-1.5 flex items-baseline gap-1.5">
-                                            <span className="text-sm font-semibold text-slate-900">
+                                        <div className="flex items-baseline gap-1.5">
+                                            <span className="text-base font-bold text-emerald-700">
                                                 {formatPrice(property.price_total)}
                                             </span>
                                             {property.lot_area_sqm && (
-                                                <span className="text-[11px] text-slate-500">
-                                                    · {property.lot_area_sqm} sqm
-                                                </span>
+                                                <span className="text-[11px] text-slate-500">· lot area</span>
                                             )}
                                         </div>
-                                        {property.location?.address && (
-                                            <p className="mt-2 line-clamp-1 text-[10px] text-slate-500">
-                                                {property.location.address}
-                                            </p>
-                                        )}
+                                        <div className="rounded-lg bg-slate-50 px-2.5 py-2">
+                                            {property.location?.address ? (
+                                                <p className="line-clamp-2 text-[11px] text-slate-600">
+                                                    {property.location.address}
+                                                </p>
+                                            ) : (
+                                                <p className="text-[11px] text-slate-500">
+                                                    Location details available on property view
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <div className="h-[600px] rounded-lg border border-slate-200 bg-white">
+                        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                            <div className="border-b border-slate-200 px-4 py-3">
+                                <p className="text-sm font-semibold text-slate-900">Property Map View</p>
+                                <p className="text-xs text-slate-500">Click any marker to preview listing details.</p>
+                            </div>
+                            <div className="h-[560px]">
                             <MapContainer
                                 key={mapKey.current}
                                 center={mapCenter}
@@ -308,6 +355,7 @@ export default function HomePage() {
                                     )
                                 ))}
                             </MapContainer>
+                            </div>
                         </div>
                     )}
                 </section>
@@ -315,21 +363,21 @@ export default function HomePage() {
 
             {selectedProperty && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
-                    <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-xl">
-                        <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white px-3 py-2">
-                            <h3 className="text-sm font-semibold text-slate-900">{selectedProperty.title}</h3>
+                    <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-xl">
+                        <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
+                            <h3 className="text-base font-semibold text-slate-900">{selectedProperty.title}</h3>
                             <button
                                 onClick={() => setSelectedProperty(null)}
-                                className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                                className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
                             >
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
                         </div>
-                        <div className="p-3">
+                        <div className="space-y-3 p-4">
                             {selectedProperty.images && selectedProperty.images.length > 0 && (
-                                <div className="mb-3 relative aspect-video overflow-hidden rounded bg-slate-100">
+                                <div className="relative aspect-video overflow-hidden rounded-xl bg-slate-100">
                                     <img
                                         src={`/storage/${selectedProperty.images[currentImageIndex].image_path}`}
                                         alt={selectedProperty.title}
@@ -339,7 +387,7 @@ export default function HomePage() {
                                         <>
                                             <button
                                                 onClick={handlePrevImage}
-                                                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-1.5 text-white hover:bg-black/70"
+                                                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-1.5 text-white transition hover:bg-black/70"
                                             >
                                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -347,7 +395,7 @@ export default function HomePage() {
                                             </button>
                                             <button
                                                 onClick={handleNextImage}
-                                                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-1.5 text-white hover:bg-black/70"
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-1.5 text-white transition hover:bg-black/70"
                                             >
                                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -360,7 +408,7 @@ export default function HomePage() {
                                     )}
                                 </div>
                             )}
-                            <div className="mb-3">
+                            <div>
                                 <p className="text-lg font-bold text-emerald-600">
                                     {formatPrice(selectedProperty.price_total)}
                                 </p>
@@ -369,27 +417,35 @@ export default function HomePage() {
                                 )}
                             </div>
                             {selectedProperty.description && (
-                                <p className="mb-3 text-xs text-slate-700 line-clamp-3">{selectedProperty.description}</p>
+                                <p className="text-sm leading-relaxed text-slate-700">{selectedProperty.description}</p>
                             )}
                             {selectedProperty.location?.address && (
-                                <div className="mb-3 rounded bg-slate-50 p-2">
-                                    <p className="text-[10px] font-medium text-slate-700">Address</p>
-                                    <p className="mt-0.5 text-xs text-slate-600">{selectedProperty.location.address}</p>
+                                <div className="rounded-xl bg-slate-50 p-3">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Address</p>
+                                    <p className="mt-1 text-sm text-slate-700">{selectedProperty.location.address}</p>
                                 </div>
                             )}
                             {selectedProperty.contact && (
-                                <div className="mb-3 rounded border border-slate-200 bg-slate-50 p-2">
-                                    <p className="text-[10px] font-medium text-slate-700">Contact</p>
-                                    <p className="mt-0.5 text-xs font-medium text-slate-900">{selectedProperty.contact}</p>
+                                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Contact</p>
+                                    <p className="mt-1 text-sm font-medium text-slate-900">{selectedProperty.contact}</p>
                                 </div>
                             )}
                             {selectedProperty.user && (
-                                <div className="rounded border border-slate-200 bg-slate-50 p-2">
-                                    <p className="text-[10px] font-medium text-slate-700">Seller</p>
-                                    <p className="mt-0.5 text-xs font-medium text-slate-900">{selectedProperty.user.name}</p>
-                                    <p className="text-[10px] text-slate-600">{selectedProperty.user.email}</p>
+                                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Seller</p>
+                                    <p className="mt-1 text-sm font-medium text-slate-900">{selectedProperty.user.name}</p>
+                                    <p className="text-xs text-slate-600">{selectedProperty.user.email}</p>
                                 </div>
                             )}
+                            <div className="pt-1">
+                                <Link
+                                    href={`/properties/${selectedProperty.id}`}
+                                    className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                                >
+                                    Open Full Property Page
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 </div>
