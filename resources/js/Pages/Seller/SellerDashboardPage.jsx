@@ -9,6 +9,7 @@ export default function SellerDashboardPage() {
     const stats = props.stats || { total_properties: 0, active_listings: 0 };
     const recentProperties = props.recent_properties || [];
     const monthlyData = props.monthly_data || [];
+    const subscription = props.subscription || { plan_name: 'Free', current_listings: 0, max_listings: 1 };
     const [toast, setToast] = useState({
         show: false,
         type: 'success',
@@ -49,12 +50,21 @@ export default function SellerDashboardPage() {
                     <h1 className="text-2xl font-bold text-slate-900">Seller Dashboard</h1>
                     <p className="mt-1 text-slate-600">Welcome back, {user?.name || 'Seller'}</p>
                 </div>
-                <Link
-                    href="/seller/properties/create"
-                    className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"
-                >
-                    Add Property
-                </Link>
+                {subscription.current_listings >= subscription.max_listings ? (
+                    <button
+                        disabled
+                        className="inline-flex items-center justify-center rounded-xl bg-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-500 cursor-not-allowed"
+                    >
+                        Limit Reached
+                    </button>
+                ) : (
+                    <Link
+                        href="/seller/properties/create"
+                        className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"
+                    >
+                        Add Property
+                    </Link>
+                )}
             </div>
 
             {/* Stats Cards */}
@@ -178,7 +188,7 @@ export default function SellerDashboardPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-emerald-900">Current Plan</p>
-                                <p className="mt-1 text-2xl font-bold text-emerald-700">Free Tier</p>
+                                <p className="mt-1 text-2xl font-bold text-emerald-700">{subscription.plan_name}</p>
                             </div>
                             <span className="rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white">
                                 Active
@@ -186,10 +196,13 @@ export default function SellerDashboardPage() {
                         </div>
                         <div className="mt-4">
                             <p className="text-sm text-emerald-800">
-                                <span className="font-semibold">1/1</span> free posts used
+                                <span className="font-semibold">{subscription.current_listings}/{subscription.max_listings}</span> posts used
                             </p>
                             <div className="mt-2 h-2 rounded-full bg-emerald-200">
-                                <div className="h-2 w-full rounded-full bg-emerald-600"></div>
+                                <div 
+                                    className="h-2 rounded-full bg-emerald-600 transition-all duration-300"
+                                    style={{ width: `${(subscription.current_listings / subscription.max_listings) * 100}%` }}
+                                ></div>
                             </div>
                         </div>
                     </div>

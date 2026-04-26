@@ -3,8 +3,11 @@
 use App\Http\Controllers\Auth\LoginUserController;
 use App\Http\Controllers\Auth\LogoutUserController;
 use App\Http\Controllers\Auth\RegisterUserController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PropertyController;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -61,17 +64,28 @@ Route::delete('/seller/properties/{property}', [PropertyController::class, 'dest
     ->middleware('seller')
     ->name('seller.properties.destroy');
 
-Route::get('/seller/subscription', function () {
-    return Inertia::render('Seller/SubscriptionOverviewPage');
-})->middleware('seller')->name('seller.subscription.overview');
+Route::get('/seller/subscription', [SubscriptionController::class, 'overview'])
+    ->middleware('seller')
+    ->name('seller.subscription.overview');
 
-Route::get('/seller/subscription/plans', function () {
-    return Inertia::render('Seller/SubscriptionPlansPage');
-})->middleware('seller')->name('seller.subscription.plans');
+Route::post('/seller/subscription/activate', [SubscriptionController::class, 'activateSubscription'])
+    ->middleware('seller')
+    ->name('seller.subscription.activate');
+
+Route::get('/seller/subscription/plans', [SubscriptionController::class, 'index'])
+    ->middleware('seller')
+    ->name('seller.subscription.plans');
+
+Route::post('/api/payment/checkout', [PaymentController::class, 'createCheckoutSession'])
+    ->middleware('auth')
+    ->name('payment.checkout');
 
 Route::get('/seller/subscription/success', function () {
     return Inertia::render('Seller/SubscriptionSuccessPage');
 })->middleware('seller')->name('seller.subscription.success');
+
+Route::post('/api/paymongo/webhook', [WebhookController::class, 'handle'])
+    ->name('paymongo.webhook');
 
 Route::get('/buyer/favorites', function () {
     return Inertia::render('Buyer/FavoritePropertiesPage');

@@ -4,7 +4,7 @@ import DashboardLayout from '../../Layouts/DashboardLayout';
 import Toast from '../../Components/UI/Toast';
 import MapModal from '../../Components/UI/MapModal';
 
-export default function CreatePropertyPage() {
+export default function CreatePropertyPage({ limit_reached = false, max_listings = 1 }) {
     const [toast, setToast] = useState({ show: false, type: 'info', message: '' });
     const [imagePreviews, setImagePreviews] = useState([]);
     const [showMapModal, setShowMapModal] = useState(false);
@@ -91,6 +91,28 @@ export default function CreatePropertyPage() {
             <h1 className="text-xl font-semibold text-slate-900">Create Property Listing</h1>
             <p className="mt-1 text-xs text-slate-500">Fill in the details below to list your property.</p>
 
+            {limit_reached && (
+                <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                    <div className="flex items-start gap-3">
+                        <svg className="mt-0.5 h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <div>
+                            <p className="text-sm font-medium text-amber-900">Subscription Limit Reached</p>
+                            <p className="mt-1 text-xs text-amber-800">
+                                You have reached your maximum of {max_listings} property listing(s). Upgrade your subscription to list more properties.
+                            </p>
+                            <Link
+                                href="/seller/subscription"
+                                className="mt-2 inline-block rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700"
+                            >
+                                Upgrade Now
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <MapModal
                 isOpen={showMapModal}
                 onClose={() => setShowMapModal(false)}
@@ -116,7 +138,8 @@ export default function CreatePropertyPage() {
                                 type="text"
                                 value={data.title}
                                 onChange={(e) => setData('title', e.target.value)}
-                                className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
+                                disabled={limit_reached}
+                                className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-50"
                                 placeholder="e.g., Modern House in Quezon City"
                                 required
                             />
@@ -131,8 +154,9 @@ export default function CreatePropertyPage() {
                                 id="description"
                                 value={data.description}
                                 onChange={(e) => setData('description', e.target.value)}
+                                disabled={limit_reached}
                                 rows={3}
-                                className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
+                                className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-50"
                                 placeholder="Describe your property..."
                             />
                             {errors.description ? <p className="mt-1 text-[10px] text-rose-600">{errors.description}</p> : null}
@@ -147,7 +171,8 @@ export default function CreatePropertyPage() {
                                 type="text"
                                 value={data.contact}
                                 onChange={(e) => setData('contact', e.target.value)}
-                                className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
+                                disabled={limit_reached}
+                                className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-50"
                                 placeholder="e.g., 0912312313/0192303123"
                             />
                             {errors.contact ? <p className="mt-1 text-[10px] text-rose-600">{errors.contact}</p> : null}
@@ -169,7 +194,8 @@ export default function CreatePropertyPage() {
                                 step="0.01"
                                 value={data.lot_area_sqm}
                                 onChange={(e) => setData('lot_area_sqm', e.target.value)}
-                                className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
+                                disabled={limit_reached}
+                                className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-50"
                                 placeholder="e.g., 150"
                             />
                             {errors.lot_area_sqm ? <p className="mt-1 text-[10px] text-rose-600">{errors.lot_area_sqm}</p> : null}
@@ -185,7 +211,8 @@ export default function CreatePropertyPage() {
                                 step="0.01"
                                 value={data.price_total}
                                 onChange={(e) => setData('price_total', e.target.value)}
-                                className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
+                                disabled={limit_reached}
+                                className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-50"
                                 placeholder="e.g., 5500000"
                                 required
                             />
@@ -202,7 +229,8 @@ export default function CreatePropertyPage() {
                                 step="0.01"
                                 value={data.price_per_sqm}
                                 onChange={(e) => setData('price_per_sqm', e.target.value)}
-                                className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
+                                disabled={limit_reached}
+                                className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-50"
                                 placeholder="e.g., 36666.67"
                                 required
                             />
@@ -218,7 +246,8 @@ export default function CreatePropertyPage() {
                         <button
                             type="button"
                             onClick={() => setShowMapModal(true)}
-                            className="rounded-lg border border-emerald-600 bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-700"
+                            disabled={limit_reached}
+                            className="rounded-lg border border-emerald-600 bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:border-slate-300 disabled:opacity-50"
                         >
                             Use Map
                         </button>
@@ -233,7 +262,8 @@ export default function CreatePropertyPage() {
                                 type="text"
                                 value={data.address}
                                 onChange={(e) => setData('address', e.target.value)}
-                                className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
+                                disabled={limit_reached}
+                                className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-50"
                                 placeholder="e.g., 123 Main St, Quezon City"
                             />
                             {errors.address ? <p className="mt-1 text-[10px] text-rose-600">{errors.address}</p> : null}
@@ -250,7 +280,8 @@ export default function CreatePropertyPage() {
                                     step="0.0000001"
                                     value={data.location_lat}
                                     onChange={(e) => setData('location_lat', e.target.value)}
-                                    className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
+                                    disabled={limit_reached}
+                                    className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-50"
                                     placeholder="e.g., 14.6760"
                                 />
                                 {errors.location_lat ? <p className="mt-1 text-[10px] text-rose-600">{errors.location_lat}</p> : null}
@@ -266,7 +297,8 @@ export default function CreatePropertyPage() {
                                     step="0.0000001"
                                     value={data.location_lng}
                                     onChange={(e) => setData('location_lng', e.target.value)}
-                                    className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
+                                    disabled={limit_reached}
+                                    className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-50"
                                     placeholder="e.g., 121.0437"
                                 />
                                 {errors.location_lng ? <p className="mt-1 text-[10px] text-rose-600">{errors.location_lng}</p> : null}
@@ -286,7 +318,8 @@ export default function CreatePropertyPage() {
                             multiple
                             accept="image/*"
                             onChange={handleImageChange}
-                            className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
+                            disabled={limit_reached}
+                            className="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-xs outline-none ring-emerald-200 focus:border-emerald-500 focus:ring disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-50"
                         />
                         {errors.images ? <p className="mt-1 text-[10px] text-rose-600">{errors.images}</p> : null}
                     </div>
@@ -312,8 +345,8 @@ export default function CreatePropertyPage() {
                     </Link>
                     <button
                         type="submit"
-                        disabled={processing}
-                        className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
+                        disabled={processing || limit_reached}
+                        className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70 disabled:bg-slate-300"
                     >
                         {processing ? 'Creating...' : 'Create Property'}
                     </button>

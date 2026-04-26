@@ -6,18 +6,82 @@ use App\Models\Property;
 use App\Models\PropertyLocation;
 use App\Models\PropertyGeometry;
 use App\Models\PropertyImage;
+use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class PropertyController extends Controller
 {
-    public function create()
+    public function create(Request $request)
     {
-        return inertia('Seller/CreatePropertyPage');
+        $user = $request->user();
+        
+        // Get user's latest ACTIVE subscription (free or paid)
+        $subscription = $user->subscriptions()
+            ->where('status', 'active')
+            ->with('plan')
+            ->latest()
+            ->first();
+
+        // If no active subscription exists, use free plan limits
+        if ($subscription) {
+            $maxListings = $subscription->plan->max_listing;
+        } else {
+            $maxListings = 1;
+        }
+
+        // Check property listing limit
+        $currentPropertyCount = Property::where('user_id', $user->id)->count();
+        $limitReached = $currentPropertyCount >= $maxListings;
+
+        return inertia('Seller/CreatePropertyPage', [
+            'limit_reached' => $limitReached,
+            'max_listings' => $maxListings,
+        ]);
     }
 
     public function store(Request $request)
     {
+        // Check subscription limits
+        $user = $request->user();
+        
+        // Get user's latest ACTIVE subscription (free or paid)
+        $subscription = $user->subscriptions()
+            ->where('status', 'active')
+            ->with('plan')
+            ->latest()
+            ->first();
+
+        // If no active subscription exists, use free plan limits
+        if ($subscription) {
+            $maxListings = $subscription->plan->max_listing;
+            $maxImages = $subscription->plan->max_images;
+        } else {
+            $maxListings = 1;
+            $maxImages = 5;
+        }
+
+        \Log::info('Property creation check', [
+            'user_id' => $user->id,
+            'subscription_id' => $subscription ? $subscription->id : null,
+            'plan_id' => $subscription ? $subscription->plan_id : null,
+            'max_listings' => $maxListings,
+            'max_images' => $maxImages,
+        ]);
+
+        // Check property listing limit
+        $currentPropertyCount = Property::where('user_id', $user->id)->count();
+        \Log::info('Current property count', [
+            'user_id' => $user->id,
+            'current_count' => $currentPropertyCount,
+            'max_listings' => $maxListings,
+        ]);
+
+        if ($currentPropertyCount >= $maxListings) {
+            return back()->with('error', "You have reached your maximum of {$maxListings} property listing(s). Upgrade your subscription to list more properties.");
+        }
+
+        // Validate with dynamic image limit
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -28,7 +92,7 @@ class PropertyController extends Controller
             'location_lat' => 'nullable|numeric|between:-90,90',
             'location_lng' => 'nullable|numeric|between:-180,180',
             'address' => 'nullable|string|max:500',
-            'images' => 'nullable|array|max:10',
+            'images' => "nullable|array|max:{$maxImages}",
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
 
@@ -207,7 +271,8 @@ class PropertyController extends Controller
 
     public function dashboard(Request $request)
     {
-        $properties = Property::where('user_id', $request->user()->id)
+        $user = $request->user();
+        $properties = Property::where('user_id', $user->id)
             ->with('images')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -215,6 +280,21 @@ class PropertyController extends Controller
         $totalProperties = $properties->count();
         $activeListings = $properties->where('is_active', true)->count();
         $recentProperties = $properties->take(5);
+
+        // Get user's ACTIVE subscription limits
+        $subscription = $user->subscriptions()
+            ->where('status', 'active')
+            ->with('plan')
+            ->latest()
+            ->first();
+
+        if ($subscription) {
+            $maxListings = $subscription->plan->max_listing;
+            $planName = $subscription->plan->name;
+        } else {
+            $maxListings = 1;
+            $planName = 'Free';
+        }
 
         // Calculate properties created in last 6 months
         $monthlyData = [];
@@ -236,6 +316,11 @@ class PropertyController extends Controller
             ],
             'recent_properties' => $recentProperties,
             'monthly_data' => $monthlyData,
+            'subscription' => [
+                'plan_name' => $planName,
+                'current_listings' => $totalProperties,
+                'max_listings' => $maxListings,
+            ],
         ]);
     }
 
