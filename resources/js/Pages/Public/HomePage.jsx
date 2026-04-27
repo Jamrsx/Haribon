@@ -335,6 +335,16 @@ export default function HomePage() {
                                                 <span className="text-[11px] text-slate-500">· lot area</span>
                                             )}
                                         </div>
+                                        {property.reviews_count > 0 && (
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-amber-400 text-xs">
+                                                    {'★'.repeat(Math.round(Number(property.average_rating) || 0))}
+                                                    {'☆'.repeat(5 - Math.round(Number(property.average_rating) || 0))}
+                                                </span>
+                                                <span className="text-xs text-slate-900">({Number(property.average_rating || 0).toFixed(1)})</span>
+                                                <span className="text-[10px] text-slate-500">({property.reviews_count} reviews)</span>
+                                            </div>
+                                        )}
                                         <div className="rounded-lg bg-slate-50 px-2.5 py-2">
                                             {property.location?.address ? (
                                                 <p className="line-clamp-2 text-[11px] text-slate-600">

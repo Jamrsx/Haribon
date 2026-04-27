@@ -75,7 +75,7 @@ const isLifetimeSeller = (property) => {
     return subscription.status === 'active' && (plan.duration_days === 0 || plan.duration_days >= 9999);
 };
 
-const getPropertyIcon = (type, isPremium, isLifetime) => {
+const getPropertyIcon = (type, isPremium, isLifetime, rating) => {
     const baseIcon = (() => {
         switch (type) {
             case 'sale':
@@ -88,6 +88,10 @@ const getPropertyIcon = (type, isPremium, isLifetime) => {
                 return greenIcon;
         }
     })();
+
+    const ratingBadge = rating && rating > 0
+        ? `<div style="position: absolute; top: -18px; left: 50%; transform: translateX(-50%); background: #f59e0b; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); z-index: 100;">${rating.toFixed(1)}</div>`
+        : '';
 
     if (isLifetime) {
         // Same pin shape with gold glow and shimmer for lifetime sellers
@@ -102,14 +106,14 @@ const getPropertyIcon = (type, isPremium, isLifetime) => {
         })();
         return L.divIcon({
             className: 'custom-div-icon',
-            html: `<div style="background-color: ${baseColor}; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; box-shadow: 0 0 5px 1px rgba(251, 191, 36, 0.3), 0 0 8px 2px rgba(251, 191, 36, 0.2), 0 2px 5px rgba(0,0,0,0.3); animation: lifetime-shimmer 1.5s ease-in-out infinite;"></div><img src="${iconPath}" style="width: 16px; height: 16px; position: absolute; top: 7px; left: 7px; filter: brightness(0) invert(1);">
+            html: `<div style="position: relative;">${ratingBadge}<div style="background-color: ${baseColor}; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; box-shadow: 0 0 5px 1px rgba(251, 191, 36, 0.3), 0 0 8px 2px rgba(251, 191, 36, 0.2), 0 2px 5px rgba(0,0,0,0.3); animation: lifetime-shimmer 1.5s ease-in-out infinite;"></div><img src="${iconPath}" style="width: 16px; height: 16px; position: absolute; top: 7px; left: 7px; filter: brightness(0) invert(1);">
 <style>
 @keyframes lifetime-shimmer {
     0% { box-shadow: 0 0 5px 1px rgba(251, 191, 36, 0.3), 0 0 8px 2px rgba(251, 191, 36, 0.2), 0 2px 5px rgba(0,0,0,0.3); }
     50% { box-shadow: 0 0 8px 2px rgba(251, 191, 36, 0.5), 0 0 12px 3px rgba(251, 191, 36, 0.3), 0 2px 5px rgba(0,0,0,0.3); }
     100% { box-shadow: 0 0 5px 1px rgba(251, 191, 36, 0.3), 0 0 8px 2px rgba(251, 191, 36, 0.2), 0 2px 5px rgba(0,0,0,0.3); }
 }
-</style>`,
+</style></div>`,
             iconSize: [30, 42],
             iconAnchor: [15, 42],
             popupAnchor: [0, -42],
@@ -127,20 +131,28 @@ const getPropertyIcon = (type, isPremium, isLifetime) => {
         })();
         return L.divIcon({
             className: 'custom-div-icon',
-            html: `<div style="background-color: ${baseIcon.options.html.match(/background-color: ([^;]+)/)?.[1]}; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.3), 0 2px 5px rgba(0,0,0,0.3); animation: premium-glow 2s ease-in-out infinite alternate;"></div><img src="${iconPath}" style="width: 16px; height: 16px; position: absolute; top: 7px; left: 7px; filter: brightness(0) invert(1);">
+            html: `<div style="position: relative;">${ratingBadge}<div style="background-color: ${baseIcon.options.html.match(/background-color: ([^;]+)/)?.[1]}; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.3), 0 2px 5px rgba(0,0,0,0.3); animation: premium-glow 2s ease-in-out infinite alternate;"></div><img src="${iconPath}" style="width: 16px; height: 16px; position: absolute; top: 7px; left: 7px; filter: brightness(0) invert(1);">
 <style>
 @keyframes premium-glow {
     0% { box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.3), 0 2px 5px rgba(0,0,0,0.3); }
     100% { box-shadow: 0 0 6px 1px rgba(255, 255, 255, 0.4), 0 2px 5px rgba(0,0,0,0.3); }
 }
-</style>`,
+</style></div>`,
             iconSize: [30, 42],
             iconAnchor: [15, 42],
             popupAnchor: [0, -42],
         });
     }
 
-    return baseIcon;
+    // Add rating badge to base icon
+    const baseHtml = baseIcon.options.html;
+    return L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div style="position: relative;">${ratingBadge}${baseHtml}</div>`,
+        iconSize: [30, 42],
+        iconAnchor: [15, 42],
+        popupAnchor: [0, -42],
+    });
 };
 
 function MapController({ center, zoom }) {
@@ -399,19 +411,24 @@ export default function MapPage() {
                             </>
                         )}
                         
-                        {filteredProperties.map((property) => (
-                            property.location && (
-                                <Marker
-                                    key={property.id}
-                                    position={[property.location.location_lat, property.location.location_lng]}
-                                    icon={getPropertyIcon(property.type, isPremiumSeller(property), isLifetimeSeller(property))}
-                                    eventHandlers={{
-                                        click: (e) => {
-                                            e.originalEvent.stopPropagation();
-                                            setSelectedProperty(property);
-                                        },
-                                    }}
-                                >
+                        {filteredProperties.map((property) => {
+                            const sellerRating = property.user?.reviews && property.user.reviews.length > 0
+                                ? property.user.reviews.reduce((sum, r) => sum + r.rating, 0) / property.user.reviews.length
+                                : 0;
+
+                            return (
+                                property.location && (
+                                    <Marker
+                                        key={property.id}
+                                        position={[property.location.location_lat, property.location.location_lng]}
+                                        icon={getPropertyIcon(property.type, isPremiumSeller(property), isLifetimeSeller(property), sellerRating)}
+                                        eventHandlers={{
+                                            click: (e) => {
+                                                e.originalEvent.stopPropagation();
+                                                setSelectedProperty(property);
+                                            },
+                                        }}
+                                    >
                                     <Popup>
                                         <div className="min-w-[200px]">
                                             <h3 className="text-sm font-semibold text-slate-900">{property.title}</h3>
@@ -432,7 +449,8 @@ export default function MapPage() {
                                     </Popup>
                                 </Marker>
                             )
-                        ))}
+                            );
+                        })}
                     </MapContainer>
                 </div>
             </main>
@@ -570,6 +588,16 @@ export default function MapPage() {
                                                 )}
                                             </div>
                                             <p className="mt-1 text-sm font-medium text-slate-900">{selectedProperty.user.name}</p>
+                                            {selectedProperty.user.reviews && selectedProperty.user.reviews.length > 0 && (
+                                                <div className="mt-1 flex items-center gap-1.5">
+                                                    <span className="text-amber-400 text-xs">
+                                                        {'★'.repeat(Math.round(selectedProperty.user.reviews.reduce((sum, r) => sum + r.rating, 0) / selectedProperty.user.reviews.length))}
+                                                        {'☆'.repeat(5 - Math.round(selectedProperty.user.reviews.reduce((sum, r) => sum + r.rating, 0) / selectedProperty.user.reviews.length))}
+                                                    </span>
+                                                    <span className="text-xs text-slate-900">({(selectedProperty.user.reviews.reduce((sum, r) => sum + r.rating, 0) / selectedProperty.user.reviews.length).toFixed(1)})</span>
+                                                    <span className="text-[10px] text-slate-500">({selectedProperty.user.reviews.length} reviews)</span>
+                                                </div>
+                                            )}
                                             <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-600">
                                                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />

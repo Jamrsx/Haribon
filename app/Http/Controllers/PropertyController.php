@@ -245,6 +245,10 @@ class PropertyController extends Controller
     {
         $query = Property::where('is_active', true)
             ->with(['images', 'location', 'user.subscription.plan'])
+            ->withCount(['reviews as reviews_count' => function ($query) {
+                $query->where('verified', true);
+            }])
+            ->selectRaw('properties.*, (SELECT AVG(rating) FROM reviews WHERE reviews.property_id = properties.id AND reviews.verified = 1) as average_rating')
             ->orderBy('created_at', 'desc');
 
         // Filter by distance if lat/lng provided
@@ -289,7 +293,9 @@ class PropertyController extends Controller
     public function map(Request $request)
     {
         $query = Property::where('is_active', true)
-            ->with(['images', 'location', 'user.subscription.plan'])
+            ->with(['images', 'location', 'user.subscription.plan', 'user.reviews' => function ($query) {
+                $query->where('verified', true);
+            }])
             ->orderBy('created_at', 'desc');
 
         // Filter by distance if lat/lng provided
@@ -319,10 +325,23 @@ class PropertyController extends Controller
             abort(404);
         }
 
-        $property->load(['images', 'location', 'user:id,name,email,profile_picture']);
+        $property->load(['images', 'location', 'user:id,name,email,profile_picture', 'user.reviews' => function ($query) {
+            $query->where('verified', true);
+        }]);
+
+        $reviews = $property->reviews()
+            ->where('verified', true)
+            ->latest()
+            ->paginate(5);
+
+        $averageRating = $property->reviews()->where('verified', true)->avg('rating') ?? 0;
+        $totalReviews = $property->reviews()->where('verified', true)->count();
 
         return inertia('Public/PropertyDetailsPage', [
             'property' => $property,
+            'reviews' => $reviews,
+            'averageRating' => round($averageRating, 1),
+            'totalReviews' => $totalReviews,
         ]);
     }
 

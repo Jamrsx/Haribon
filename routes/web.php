@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\RegisterUserController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PropertyController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
@@ -95,3 +96,7 @@ Route::post('/api/paymongo/webhook', [WebhookController::class, 'handle'])
 Route::get('/buyer/favorites', function () {
     return Inertia::render('Buyer/FavoritePropertiesPage');
 })->middleware('auth')->name('buyer.favorites');
+
+Route::post('/properties/{property}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+Route::get('/reviews/verify/{token}', [ReviewController::class, 'verify'])->name('reviews.verify');
+Route::get('/sellers/{seller}/reviews', [ReviewController::class, 'index'])->name('reviews.index');

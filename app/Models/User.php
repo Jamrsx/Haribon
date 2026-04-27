@@ -72,4 +72,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class, 'seller_id');
+    }
+
+    public function averageRating(): float
+    {
+        return $this->reviews()->where('verified', true)->avg('rating') ?? 0.0;
+    }
 }
