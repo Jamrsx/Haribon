@@ -5,7 +5,8 @@ import Toast from '../../Components/UI/Toast';
 
 export default function PropertyListPage() {
     const { props } = usePage();
-    const properties = props.properties || [];
+    const properties = props.properties?.data || [];
+    const pagination = props.properties || {};
     const [toast, setToast] = useState({ show: false, type: 'success', message: '' });
     const [filterType, setFilterType] = useState('all');
 
@@ -81,7 +82,7 @@ export default function PropertyListPage() {
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-xl font-semibold text-slate-900">My Properties</h1>
-                    <p className="text-xs text-slate-500">{filteredProperties.length} of {properties.length} listing{properties.length !== 1 ? 's' : ''}</p>
+                    <p className="text-xs text-slate-500">{filteredProperties.length} of {pagination.total || 0} listing{pagination.total !== 1 ? 's' : ''}</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="flex items-center overflow-hidden rounded-lg border border-slate-200 bg-white">
@@ -203,6 +204,33 @@ export default function PropertyListPage() {
                             </div>
                         </Link>
                     ))}
+                </div>
+            )}
+
+            {pagination.last_page > 1 && (
+                <div className="mt-4 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-3">
+                    <p className="text-xs text-slate-500">
+                        Showing {pagination.from || 0} to {pagination.to || 0} of {pagination.total} results
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => router.get('/seller/properties', { page: pagination.current_page - 1 }, { preserveState: true })}
+                            disabled={!pagination.prev_page_url}
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Previous
+                        </button>
+                        <span className="text-xs font-medium text-slate-700">
+                            Page {pagination.current_page} of {pagination.last_page}
+                        </span>
+                        <button
+                            onClick={() => router.get('/seller/properties', { page: pagination.current_page + 1 }, { preserveState: true })}
+                            disabled={!pagination.next_page_url}
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             )}
         </DashboardLayout>

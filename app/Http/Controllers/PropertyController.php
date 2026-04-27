@@ -145,7 +145,7 @@ class PropertyController extends Controller
         $properties = Property::where('user_id', $request->user()->id)
             ->with('images')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(8);
 
         return inertia('Seller/PropertyListPage', [
             'properties' => $properties,
