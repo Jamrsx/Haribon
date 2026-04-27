@@ -49,6 +49,20 @@ export default function RegisterPage() {
         return data.password !== data.password_confirmation;
     }, [data.password, data.password_confirmation]);
 
+    const phoneError = useMemo(() => {
+        if (!data.phone) return null;
+        if (!/^\d+$/.test(data.phone)) {
+            return 'Phone number must contain only digits.';
+        }
+        if (data.phone.length !== 11) {
+            return 'Phone number must be exactly 11 digits.';
+        }
+        if (!data.phone.startsWith('09')) {
+            return 'Phone number must start with 09.';
+        }
+        return null;
+    }, [data.phone]);
+
     useEffect(() => {
         console.log('RegisterPage loaded');
     }, []);
@@ -79,6 +93,15 @@ export default function RegisterPage() {
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log('Register submit payload', data);
+
+        if (phoneError) {
+            setToast({
+                show: true,
+                type: 'warning',
+                message: phoneError,
+            });
+            return;
+        }
 
         if (passwordMismatch) {
             setToast({
@@ -118,7 +141,10 @@ export default function RegisterPage() {
                     <div>
                         <p className="text-sm font-medium text-blue-900">Seller Account Benefits</p>
                         <p className="mt-1 text-sm text-blue-800">
-                            Start with 1 free property listing. Upgrade to 6 months (10 listings) or 1 year (unlimited listings) for more features.
+                            Start with 1 free property listing. Upgrade to 6 months (10 listings), 1 year (20 listings), or lifetime (unlimited listings) for more features.
+                        </p>
+                        <p className="mt-2 text-xs text-blue-700">
+                            Your subscription helps support the developers and pay for the infrastructure. You can still use the platform freely with 1 listing.
                         </p>
                     </div>
                 </div>
@@ -180,12 +206,19 @@ export default function RegisterPage() {
                     <input
                         id="phone"
                         type="text"
+                        inputMode="numeric"
+                        maxLength={11}
+                        placeholder="09123456789"
                         value={data.phone}
-                        onChange={(e) => setData('phone', e.target.value)}
+                        onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '');
+                            setData('phone', value);
+                        }}
                         className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
                         required
                     />
-                    {errors.phone ? <p className="mt-1 text-xs text-rose-600">{errors.phone}</p> : null}
+                    {phoneError ? <p className="mt-1 text-xs text-rose-600">{phoneError}</p> : null}
+                    {errors.phone && !phoneError ? <p className="mt-1 text-xs text-rose-600">{errors.phone}</p> : null}
                 </div>
 
                 <div>
