@@ -171,8 +171,15 @@ export default function HomePage() {
             <Head title="Haribon | Find Your Next Property" />
             <Header />
             <main className="flex-1">
-                <section className="border-b border-slate-200 bg-white">
-                    <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.2fr,0.8fr] lg:items-center lg:px-8 lg:py-14">
+                <section className="relative overflow-hidden bg-white">
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-white" />
+                    <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="#10b981" fillOpacity="0.1"/>
+                    </svg>
+                    <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0 80L48 70C96 60 192 40 288 35C384 30 480 40 576 45C672 50 768 50 864 42.5C960 35 1056 20 1152 20C1248 20 1344 35 1392 42.5L1440 50V80H1392C1344 80 1248 80 1152 80C1056 80 960 80 864 80C768 80 672 80 576 80C480 80 384 80 288 80C192 80 96 80 48 80H0Z" fill="#10b981" fillOpacity="0.15"/>
+                    </svg>
+                    <div className="relative mx-auto grid w-full max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[1.2fr,0.8fr] lg:items-center lg:px-8 lg:py-14">
                         <div>
                             <p className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
                                 Haribon Real Estate Marketplace
@@ -205,20 +212,20 @@ export default function HomePage() {
                                 </Link>
                             </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:gap-4 sm:p-5">
-                            <div className="rounded-xl border border-slate-200 bg-white p-4">
+                        <div className="grid grid-cols-2 gap-3 rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm p-4 shadow-lg sm:gap-4 sm:p-5">
+                            <div className="rounded-xl border border-emerald-100 bg-white p-4 shadow-sm">
                                 <p className="text-xs text-slate-500">Available Listings</p>
-                                <p className="mt-1 text-2xl font-bold text-slate-900">{pagination.total || 0}</p>
+                                <p className="mt-1 text-2xl font-bold text-emerald-700">{pagination.total || 0}</p>
                             </div>
-                            <div className="rounded-xl border border-slate-200 bg-white p-4">
+                            <div className="rounded-xl border border-emerald-100 bg-white p-4 shadow-sm">
                                 <p className="text-xs text-slate-500">Map Discovery</p>
                                 <p className="mt-1 text-2xl font-bold text-emerald-700">Live</p>
                             </div>
-                            <div className="rounded-xl border border-slate-200 bg-white p-4">
+                            <div className="rounded-xl border border-emerald-100 bg-white p-4 shadow-sm">
                                 <p className="text-xs text-slate-500">Buyer Access</p>
                                 <p className="mt-1 text-sm font-semibold text-slate-900">No login required</p>
                             </div>
-                            <div className="rounded-xl border border-slate-200 bg-white p-4">
+                            <div className="rounded-xl border border-emerald-100 bg-white p-4 shadow-sm">
                                 <p className="text-xs text-slate-500">Seller Publishing</p>
                                 <p className="mt-1 text-sm font-semibold text-slate-900">Fast and simple</p>
                             </div>

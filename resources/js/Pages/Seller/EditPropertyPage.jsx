@@ -13,7 +13,7 @@ export default function EditPropertyPage() {
     const [imagesToDelete, setImagesToDelete] = useState([]);
     const [showMapModal, setShowMapModal] = useState(false);
 
-    const { data, setData, put, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors, reset, transform } = useForm({
         title: property.title || '',
         description: property.description || '',
         contact: property.contact || '',
@@ -67,40 +67,26 @@ export default function EditPropertyPage() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const formData = new FormData();
-        formData.append('title', data.title);
-        formData.append('description', data.description);
-        formData.append('contact', data.contact);
-        formData.append('type', data.type);
-        formData.append('lot_area_sqm', data.lot_area_sqm);
-        formData.append('price_total', data.price_total);
-        formData.append('price_per_sqm', data.price_per_sqm);
-        formData.append('rental_period', data.rental_period);
-        formData.append('lease_duration_months', data.lease_duration_months);
-        formData.append('location_lat', data.location_lat);
-        formData.append('location_lng', data.location_lng);
-        formData.append('address', data.address);
-        formData.append('is_active', data.is_active ? '1' : '0');
+        transform((currentData) => ({
+            ...currentData,
+            _method: 'put',
+            is_active: currentData.is_active ? '1' : '0',
+        }));
 
-        data.delete_images.forEach((id) => {
-            formData.append('delete_images[]', id);
-        });
-
-        data.images.forEach((image) => {
-            formData.append('images[]', image);
-        });
-
-        put(`/seller/properties/${property.id}`, {
-            data: formData,
+        post(`/seller/properties/${property.id}`, {
+            forceFormData: true,
             onSuccess: () => {
                 reset();
                 setImagePreviews([]);
                 setImagesToDelete([]);
                 setToast({ show: true, type: 'success', message: 'Property updated successfully!' });
             },
-            onError: () => {
-                const firstError = Object.values(errors)[0] || 'Unable to update property.';
+            onError: (formErrors) => {
+                const firstError = Object.values(formErrors)[0] || 'Unable to update property.';
                 setToast({ show: true, type: 'error', message: firstError });
+            },
+            onFinish: () => {
+                transform((currentData) => currentData);
             },
         });
     };

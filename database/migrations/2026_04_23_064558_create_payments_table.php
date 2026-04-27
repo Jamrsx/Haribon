@@ -13,16 +13,13 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->integer('user_id');
-            $table->integer('subscription_id')->nullable();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('subscription_id')->nullable()->constrained('subscription')->cascadeOnDelete();
             $table->string('provider'); // gcash / maya / etc
             $table->decimal('amount', 10, 2);
             $table->string('status'); //pending / paid / failed
             $table->string('reference_number');
             $table->timestamps();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('subscription_id')->references('id')->on('subscription')->onDelete('cascade');
         });
     }
 
