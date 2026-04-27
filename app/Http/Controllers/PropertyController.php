@@ -261,7 +261,7 @@ class PropertyController extends Controller
             });
         }
 
-        $properties = $query->get();
+        $properties = $query->paginate(8);
 
         return inertia('Public/HomePage', [
             'properties' => $properties,
@@ -279,7 +279,7 @@ class PropertyController extends Controller
             $query->where('type', $request->type);
         }
 
-        $properties = $query->get();
+        $properties = $query->paginate(8);
 
         return inertia('Public/AllListingsPage', [
             'properties' => $properties,

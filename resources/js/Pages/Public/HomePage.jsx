@@ -69,7 +69,8 @@ function MapController({ center, zoom }) {
 
 export default function HomePage() {
     const { props } = usePage();
-    const properties = props.properties || [];
+    const properties = props.properties?.data || [];
+    const pagination = props.properties || {};
     const [viewMode, setViewMode] = useState('list');
     const [selectedProperty, setSelectedProperty] = useState(null);
     const [userLocation, setUserLocation] = useState(null);
@@ -207,7 +208,7 @@ export default function HomePage() {
                         <div className="grid grid-cols-2 gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:gap-4 sm:p-5">
                             <div className="rounded-xl border border-slate-200 bg-white p-4">
                                 <p className="text-xs text-slate-500">Available Listings</p>
-                                <p className="mt-1 text-2xl font-bold text-slate-900">{properties.length}</p>
+                                <p className="mt-1 text-2xl font-bold text-slate-900">{pagination.total || 0}</p>
                             </div>
                             <div className="rounded-xl border border-slate-200 bg-white p-4">
                                 <p className="text-xs text-slate-500">Map Discovery</p>
@@ -230,7 +231,7 @@ export default function HomePage() {
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
-                                {properties.length} {properties.length === 1 ? 'Property' : 'Properties'}
+                                {pagination.total || 0} {pagination.total === 1 ? 'Property' : 'Properties'}
                             </h2>
                             {userLocation && (
                                 <p className="text-xs text-slate-500 sm:text-sm">Showing within {radius} km of your location</p>
@@ -279,8 +280,9 @@ export default function HomePage() {
                     </div>
 
                     {viewMode === 'list' ? (
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {properties.map((property) => (
+                        <>
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                {properties.map((property) => (
                                 <div
                                     key={property.id}
                                     onClick={() => setSelectedProperty(property)}
@@ -341,6 +343,34 @@ export default function HomePage() {
                                 </div>
                             ))}
                         </div>
+
+                        {pagination.last_page > 1 && (
+                            <div className="mt-4 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-3">
+                                <p className="text-xs text-slate-500">
+                                    Showing {pagination.from || 0} to {pagination.to || 0} of {pagination.total} results
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => router.get('/', { page: pagination.current_page - 1 }, { preserveState: true })}
+                                        disabled={!pagination.prev_page_url}
+                                        className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Previous
+                                    </button>
+                                    <span className="text-xs font-medium text-slate-700">
+                                        Page {pagination.current_page} of {pagination.last_page}
+                                    </span>
+                                    <button
+                                        onClick={() => router.get('/', { page: pagination.current_page + 1 }, { preserveState: true })}
+                                        disabled={!pagination.next_page_url}
+                                        className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </>
                     ) : (
                         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                             <div className="border-b border-slate-200 px-4 py-3">

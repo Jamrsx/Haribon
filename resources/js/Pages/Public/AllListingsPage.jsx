@@ -5,7 +5,8 @@ import Footer from '../../Components/UI/Footer';
 
 export default function AllListingsPage() {
     const { props } = usePage();
-    const properties = props.properties || [];
+    const properties = props.properties?.data || [];
+    const pagination = props.properties || {};
     const [filterType, setFilterType] = useState('all');
     const [viewMode, setViewMode] = useState('list');
 
@@ -17,10 +18,6 @@ export default function AllListingsPage() {
             maximumFractionDigits: 0,
         }).format(price);
     };
-
-    const filteredProperties = filterType === 'all'
-        ? properties
-        : properties.filter((property) => property.type === filterType);
 
     const getTypeLabel = (type) => {
         switch (type) {
@@ -92,7 +89,7 @@ export default function AllListingsPage() {
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
-                                    {filteredProperties.length} {filteredProperties.length === 1 ? 'Property' : 'Properties'}
+                                    {pagination.total || 0} {pagination.total === 1 ? 'Property' : 'Properties'}
                                 </h2>
                                 <p className="text-xs text-slate-500 sm:text-sm">
                                     {filterType === 'all' ? 'Showing all listings' : `Showing ${filterType} properties`}
@@ -140,7 +137,7 @@ export default function AllListingsPage() {
                         </div>
                     </div>
 
-                    {filteredProperties.length === 0 ? (
+                    {properties.length === 0 ? (
                         <div className="flex min-h-[400px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-8">
                             <svg className="mb-4 h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -153,8 +150,9 @@ export default function AllListingsPage() {
                             </p>
                         </div>
                     ) : (
-                        <div className={viewMode === 'list' ? 'space-y-4' : 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}>
-                            {filteredProperties.map((property) => (
+                        <>
+                            <div className={viewMode === 'list' ? 'space-y-4' : 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}>
+                                {properties.map((property) => (
                                 <Link
                                     key={property.id}
                                     href={`/properties/${property.id}`}
@@ -217,6 +215,34 @@ export default function AllListingsPage() {
                                 </Link>
                             ))}
                         </div>
+
+                        {pagination.last_page > 1 && (
+                            <div className="mt-4 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-3">
+                                <p className="text-xs text-slate-500">
+                                    Showing {pagination.from || 0} to {pagination.to || 0} of {pagination.total} results
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => router.get('/listings', { page: pagination.current_page - 1, type: filterType === 'all' ? null : filterType }, { preserveState: true })}
+                                        disabled={!pagination.prev_page_url}
+                                        className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Previous
+                                    </button>
+                                    <span className="text-xs font-medium text-slate-700">
+                                        Page {pagination.current_page} of {pagination.last_page}
+                                    </span>
+                                    <button
+                                        onClick={() => router.get('/listings', { page: pagination.current_page + 1, type: filterType === 'all' ? null : filterType }, { preserveState: true })}
+                                        disabled={!pagination.next_page_url}
+                                        className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </>
                     )}
                 </section>
             </main>
