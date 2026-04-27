@@ -7,6 +7,7 @@ use App\Models\Plan;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
@@ -41,23 +42,34 @@ class PaymentController extends Controller
         ]);
 
         try {
-            // Create PayMongo payment link using HTTP client
+            // Create PayMongo checkout session using HTTP client
             $secretKey = config('services.paymongo.secret_key');
             if (! $secretKey) {
                 throw new \Exception('PAYMONGO_SECRET_KEY is not configured.');
             }
 
+            $referenceNumber = 'SUB'.$subscription->id.'U'.$user->id.Str::upper(Str::random(4));
+
             $response = \Http::withHeaders([
                 'Authorization' => 'Basic '.base64_encode($secretKey.':'),
                 'Content-Type' => 'application/json',
-            ])->post('https://api.paymongo.com/v1/links', [
+            ])->post('https://api.paymongo.com/v1/checkout_sessions', [
                 'data' => [
                     'attributes' => [
-                        'amount' => (int) ($plan->price * 100),
-                        'currency' => 'PHP',
                         'description' => $plan->name.' Subscription',
-                        'name' => $plan->name.' Subscription',
-                        'remarks' => 'Subscription for user '.$user->id,
+                        'line_items' => [
+                            [
+                                'amount' => (int) ($plan->price * 100),
+                                'currency' => 'PHP',
+                                'name' => $plan->name.' Subscription',
+                                'quantity' => 1,
+                            ],
+                        ],
+                        'payment_method_types' => ['qrph'],
+                        'send_email_receipt' => true,
+                        'show_description' => true,
+                        'show_line_items' => true,
+                        'reference_number' => $referenceNumber,
                         'metadata' => [
                             'subscription_id' => (string) $subscription->id,
                             'user_id' => (string) $user->id,
@@ -65,7 +77,6 @@ class PaymentController extends Controller
                         ],
                         'success_url' => route('seller.subscription.success'),
                         'cancel_url' => route('seller.subscription.plans'),
-                        'type' => 'single',
                     ],
                 ],
             ]);
@@ -79,8 +90,8 @@ class PaymentController extends Controller
             }
 
             $checkoutUrl = $response->json('data.attributes.checkout_url');
-            $linkId = $response->json('data.id');
-            $referenceNumber = $response->json('data.attributes.reference_number');
+            $checkoutSessionId = $response->json('data.id');
+            $paymongoReferenceNumber = $response->json('data.attributes.reference_number') ?? $referenceNumber;
 
             if (! $checkoutUrl) {
                 throw new \Exception('No checkout URL returned from PayMongo');
@@ -95,7 +106,7 @@ class PaymentController extends Controller
                     'provider' => 'paymongo',
                     'amount' => $plan->price,
                     'status' => 'pending',
-                    'reference_number' => $referenceNumber ?? $linkId ?? 'pending_link',
+                    'reference_number' => $paymongoReferenceNumber ?? $checkoutSessionId ?? 'pending_checkout_session',
                 ]
             );
 

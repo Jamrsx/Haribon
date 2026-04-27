@@ -14,9 +14,12 @@ class Property extends Model
         'title',
         'description',
         'contact',
+        'type',
         'lot_area_sqm',
         'price_total',
         'price_per_sqm',
+        'rental_period',
+        'lease_duration_months',
         'is_active',
     ];
 
@@ -24,6 +27,7 @@ class Property extends Model
         'lot_area_sqm' => 'decimal:2',
         'price_total' => 'decimal:2',
         'price_per_sqm' => 'decimal:2',
+        'lease_duration_months' => 'integer',
         'is_active' => 'boolean',
     ];
 

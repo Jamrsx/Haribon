@@ -17,9 +17,12 @@ return new class extends Migration
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('contact');
+            $table->enum('type', ['sale', 'rent', 'lease'])->default('sale');
             $table->decimal('lot_area_sqm', 12, 2)->nullable();
             $table->decimal('price_total', 15, 2);
-            $table->decimal('price_per_sqm', 15, 2);
+            $table->decimal('price_per_sqm', 15, 2)->nullable();
+            $table->string('rental_period')->nullable()->comment('monthly, yearly, etc. for rent/lease');
+            $table->integer('lease_duration_months')->nullable()->comment('duration in months for lease properties');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

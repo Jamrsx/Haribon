@@ -7,6 +7,7 @@ export default function PropertyListPage() {
     const { props } = usePage();
     const properties = props.properties || [];
     const [toast, setToast] = useState({ show: false, type: 'success', message: '' });
+    const [filterType, setFilterType] = useState('all');
 
     useEffect(() => {
         if (props.flash?.success) {
@@ -37,6 +38,36 @@ export default function PropertyListPage() {
         }
     };
 
+    const filteredProperties = filterType === 'all'
+        ? properties
+        : properties.filter((property) => property.type === filterType);
+
+    const getTypeLabel = (type) => {
+        switch (type) {
+            case 'sale':
+                return 'For Sale';
+            case 'rent':
+                return 'For Rent';
+            case 'lease':
+                return 'For Lease';
+            default:
+                return type;
+        }
+    };
+
+    const getTypeColor = (type) => {
+        switch (type) {
+            case 'sale':
+                return 'bg-emerald-100 text-emerald-700';
+            case 'rent':
+                return 'bg-blue-100 text-blue-700';
+            case 'lease':
+                return 'bg-yellow-100 text-yellow-700';
+            default:
+                return 'bg-slate-100 text-slate-700';
+        }
+    };
+
     return (
         <DashboardLayout title="My Properties">
             <Head title="My Properties" />
@@ -47,39 +78,62 @@ export default function PropertyListPage() {
                 onClose={() => setToast((prev) => ({ ...prev, show: false }))}
             />
 
-            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-xl font-semibold text-slate-900">My Properties</h1>
-                    <p className="text-xs text-slate-500">{properties.length} listing{properties.length !== 1 ? 's' : ''}</p>
+                    <p className="text-xs text-slate-500">{filteredProperties.length} of {properties.length} listing{properties.length !== 1 ? 's' : ''}</p>
                 </div>
-                <Link
-                    href="/seller/properties/create"
-                    className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-700"
-                >
-                    <svg className="mr-1.5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Add Property
-                </Link>
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center overflow-hidden rounded-lg border border-slate-200 bg-white">
+                        {['all', 'sale', 'rent', 'lease'].map((type) => (
+                            <button
+                                key={type}
+                                onClick={() => setFilterType(type)}
+                                className={`px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
+                                    filterType === type
+                                        ? 'bg-emerald-50 text-emerald-700'
+                                        : 'text-slate-600 hover:bg-slate-50'
+                                }`}
+                            >
+                                {type === 'all' ? 'All' : type}
+                            </button>
+                        ))}
+                    </div>
+                    <Link
+                        href="/seller/properties/create"
+                        className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-700"
+                    >
+                        <svg className="mr-1.5 h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Property
+                    </Link>
+                </div>
             </div>
 
-            {properties.length === 0 ? (
+            {filteredProperties.length === 0 ? (
                 <div className="flex min-h-[300px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 p-8">
                     <svg className="mb-3 h-10 w-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
-                    <h3 className="text-sm font-medium text-slate-900">No properties listed yet</h3>
-                    <p className="mt-1 text-xs text-slate-500">Create your first property listing to get started</p>
-                    <Link
-                        href="/seller/properties/create"
-                        className="mt-3 inline-flex items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-700"
-                    >
-                        Create Property
-                    </Link>
+                    <h3 className="text-sm font-medium text-slate-900">
+                        {filterType === 'all' ? 'No properties listed yet' : `No ${filterType} properties`}
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                        {filterType === 'all' ? 'Create your first property listing to get started' : 'Try selecting a different filter'}
+                    </p>
+                    {filterType === 'all' && (
+                        <Link
+                            href="/seller/properties/create"
+                            className="mt-3 inline-flex items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-700"
+                        >
+                            Create Property
+                        </Link>
+                    )}
                 </div>
             ) : (
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {properties.map((property) => (
+                    {filteredProperties.map((property) => (
                         <Link
                             key={property.id}
                             href={`/seller/properties/${property.id}/edit`}
@@ -99,6 +153,13 @@ export default function PropertyListPage() {
                                         </svg>
                                     </div>
                                 )}
+                                <div className="absolute left-2 top-2 flex gap-1">
+                                    <span
+                                        className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm ${getTypeColor(property.type)}`}
+                                    >
+                                        {getTypeLabel(property.type)}
+                                    </span>
+                                </div>
                                 <div className="absolute right-2 top-2">
                                     <span
                                         className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium backdrop-blur-sm ${

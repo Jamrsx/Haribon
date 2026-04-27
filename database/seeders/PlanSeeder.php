@@ -35,8 +35,18 @@ class PlanSeeder extends Seeder
             'name' => '1 Year',
             'price' => 50.00,
             'duration_days' => 365,
-            'max_listing' => 999,
+            'max_listing' => 20,
             'max_images' => 999,
         ]);
+
+         Plan::create([
+            'name' => 'Lifetime',
+            'price' => 1699.00,
+            'duration_days' => 0,
+            'max_listing' => 999999,
+            'max_images' => 999999,
+        ]);
+
+        
     }
 }

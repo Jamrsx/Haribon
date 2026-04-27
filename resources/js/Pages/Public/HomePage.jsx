@@ -28,6 +28,35 @@ const blueIcon = L.divIcon({
     popupAnchor: [0, -42],
 });
 
+const yellowIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="background-color: #eab308; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div><div style="background-color: white; width: 8px; height: 8px; border-radius: 50%; position: absolute; top: 8px; left: 8px;"></div>`,
+    iconSize: [30, 42],
+    iconAnchor: [15, 42],
+    popupAnchor: [0, -42],
+});
+
+const userLocationIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="background-color: #ef4444; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div><div style="background-color: white; width: 8px; height: 8px; border-radius: 50%; position: absolute; top: 8px; left: 8px;"></div>`,
+    iconSize: [30, 42],
+    iconAnchor: [15, 42],
+    popupAnchor: [0, -42],
+});
+
+const getPropertyIcon = (type) => {
+    switch (type) {
+        case 'sale':
+            return greenIcon;
+        case 'rent':
+            return blueIcon;
+        case 'lease':
+            return yellowIcon;
+        default:
+            return greenIcon;
+    }
+};
+
 function MapController({ center, zoom }) {
     const map = useMap();
     useEffect(() => {
@@ -56,6 +85,15 @@ export default function HomePage() {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
         }).format(price);
+    };
+
+    const isPremiumSeller = (property) => {
+        if (!property.user?.subscription) return false;
+        const subscription = property.user.subscription;
+        const plan = subscription.plan;
+        if (!plan) return false;
+        // Premium if they have an active 1-year subscription (365 days) or lifetime plan
+        return subscription.status === 'active' && plan.duration_days >= 365;
     };
 
     const handleNearMe = () => {
@@ -152,12 +190,18 @@ export default function HomePage() {
                                 >
                                     {loadingNearMe ? 'Locating...' : 'Find Near Me'}
                                 </button>
-                                <button
-                                    onClick={() => setViewMode('map')}
+                                <Link
+                                    href="/map"
                                     className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                                 >
                                     Explore on Map
-                                </button>
+                                </Link>
+                                <Link
+                                    href="/listings"
+                                    className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                                >
+                                    View All Listings
+                                </Link>
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:gap-4 sm:p-5">
@@ -256,8 +300,18 @@ export default function HomePage() {
                                                 </svg>
                                             </div>
                                         )}
-                                        <div className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[10px] font-semibold text-slate-700">
-                                            {property.lot_area_sqm ? `${property.lot_area_sqm} sqm` : 'Lot Property'}
+                                        <div className="absolute left-2 top-2 flex gap-1">
+                                            <div className="rounded-full bg-white/90 px-2 py-1 text-[10px] font-semibold text-slate-700">
+                                                {property.lot_area_sqm ? `${property.lot_area_sqm} sqm` : 'Lot Property'}
+                                            </div>
+                                            {isPremiumSeller(property) && (
+                                                <div className="flex items-center gap-1 rounded-full bg-amber-500 px-2 py-1 text-[10px] font-semibold text-white">
+                                                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                    </svg>
+                                                    Premium
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="space-y-2 p-4">
@@ -308,7 +362,7 @@ export default function HomePage() {
                                 {userLocation && (
                                     <Marker
                                         position={[userLocation.lat, userLocation.lng]}
-                                        icon={blueIcon}
+                                        icon={userLocationIcon}
                                     >
                                         <Popup>
                                             <div className="min-w-[150px]">
@@ -325,7 +379,7 @@ export default function HomePage() {
                                         <Marker
                                             key={property.id}
                                             position={[property.location.location_lat, property.location.location_lng]}
-                                            icon={greenIcon}
+                                            icon={getPropertyIcon(property.type)}
                                             eventHandlers={{
                                                 click: (e) => {
                                                     e.originalEvent.stopPropagation();
@@ -362,8 +416,8 @@ export default function HomePage() {
             </main>
 
             {selectedProperty && (
-                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
-                    <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-xl">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4" onClick={() => setSelectedProperty(null)}>
+                    <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
                         <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
                             <h3 className="text-base font-semibold text-slate-900">{selectedProperty.title}</h3>
                             <button
@@ -421,21 +475,63 @@ export default function HomePage() {
                             )}
                             {selectedProperty.location?.address && (
                                 <div className="rounded-xl bg-slate-50 p-3">
-                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Address</p>
-                                    <p className="mt-1 text-sm text-slate-700">{selectedProperty.location.address}</p>
+                                    <div className="flex items-start gap-2">
+                                        <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        <div className="flex-1">
+                                            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Address</p>
+                                            <p className="mt-1 text-sm text-slate-700">{selectedProperty.location.address}</p>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                             {selectedProperty.contact && (
                                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Contact</p>
-                                    <p className="mt-1 text-sm font-medium text-slate-900">{selectedProperty.contact}</p>
+                                    <div className="flex items-start gap-2">
+                                        <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                        </svg>
+                                        <div className="flex-1">
+                                            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Contact</p>
+                                            <p className="mt-1 text-sm font-medium text-slate-900">{selectedProperty.contact}</p>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                             {selectedProperty.user && (
                                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Seller</p>
-                                    <p className="mt-1 text-sm font-medium text-slate-900">{selectedProperty.user.name}</p>
-                                    <p className="text-xs text-slate-600">{selectedProperty.user.email}</p>
+                                    <div className="flex items-start gap-3">
+                                        <img
+                                            src={selectedProperty.user.profile_picture ? `/storage/${selectedProperty.user.profile_picture}` : '/storage/Hari/haribon-smile.png'}
+                                            alt="Seller"
+                                            className="h-16 w-16 rounded-full border-2 border-white object-cover shadow-sm"
+                                            onError={(e) => {
+                                                e.target.src = '/storage/Hari/haribon-smile.png';
+                                            }}
+                                        />
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Seller</p>
+                                                {isPremiumSeller(selectedProperty) && (
+                                                    <div className="flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-semibold text-white">
+                                                        <svg className="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                        </svg>
+                                                        Premium
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <p className="mt-1 text-sm font-medium text-slate-900">{selectedProperty.user.name}</p>
+                                            <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-600">
+                                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                </svg>
+                                                {selectedProperty.user.email}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                             <div className="pt-1">

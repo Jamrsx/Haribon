@@ -86,9 +86,12 @@ class PropertyController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'contact' => 'nullable|string|max:255',
+            'type' => 'required|in:sale,rent,lease',
             'lot_area_sqm' => 'nullable|numeric|min:0',
             'price_total' => 'required|numeric|min:0',
-            'price_per_sqm' => 'required|numeric|min:0',
+            'price_per_sqm' => 'required_if:type,sale|nullable|numeric|min:0',
+            'rental_period' => 'required_if:type,rent,lease|nullable|string|max:50',
+            'lease_duration_months' => 'required_if:type,lease|nullable|integer|min:1',
             'location_lat' => 'nullable|numeric|between:-90,90',
             'location_lng' => 'nullable|numeric|between:-180,180',
             'address' => 'nullable|string|max:500',
@@ -101,9 +104,12 @@ class PropertyController extends Controller
             'title' => $validated['title'],
             'description' => $validated['description'],
             'contact' => $validated['contact'],
+            'type' => $validated['type'],
             'lot_area_sqm' => $validated['lot_area_sqm'],
             'price_total' => $validated['price_total'],
             'price_per_sqm' => $validated['price_per_sqm'],
+            'rental_period' => $validated['rental_period'] ?? null,
+            'lease_duration_months' => $validated['lease_duration_months'] ?? null,
             'is_active' => true,
         ]);
 
@@ -169,9 +175,12 @@ class PropertyController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'contact' => 'nullable|string|max:255',
+            'type' => 'required|in:sale,rent,lease',
             'lot_area_sqm' => 'nullable|numeric|min:0',
             'price_total' => 'required|numeric|min:0',
-            'price_per_sqm' => 'required|numeric|min:0',
+            'price_per_sqm' => 'required_if:type,sale|nullable|numeric|min:0',
+            'rental_period' => 'required_if:type,rent,lease|nullable|string|max:50',
+            'lease_duration_months' => 'required_if:type,lease|nullable|integer|min:1',
             'location_lat' => 'nullable|numeric|between:-90,90',
             'location_lng' => 'nullable|numeric|between:-180,180',
             'address' => 'nullable|string|max:500',
@@ -186,9 +195,12 @@ class PropertyController extends Controller
             'title' => $validated['title'],
             'description' => $validated['description'],
             'contact' => $validated['contact'],
+            'type' => $validated['type'],
             'lot_area_sqm' => $validated['lot_area_sqm'],
             'price_total' => $validated['price_total'],
             'price_per_sqm' => $validated['price_per_sqm'],
+            'rental_period' => $validated['rental_period'] ?? null,
+            'lease_duration_months' => $validated['lease_duration_months'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
         ]);
 
@@ -232,7 +244,7 @@ class PropertyController extends Controller
     public function publicIndex(Request $request)
     {
         $query = Property::where('is_active', true)
-            ->with(['images', 'location', 'user'])
+            ->with(['images', 'location', 'user.subscription.plan'])
             ->orderBy('created_at', 'desc');
 
         // Filter by distance if lat/lng provided
@@ -256,13 +268,58 @@ class PropertyController extends Controller
         ]);
     }
 
+    public function allListings(Request $request)
+    {
+        $query = Property::where('is_active', true)
+            ->with(['images', 'location', 'user.subscription.plan'])
+            ->orderBy('created_at', 'desc');
+
+        // Filter by type if provided
+        if ($request->has('type') && in_array($request->type, ['sale', 'rent', 'lease'])) {
+            $query->where('type', $request->type);
+        }
+
+        $properties = $query->get();
+
+        return inertia('Public/AllListingsPage', [
+            'properties' => $properties,
+        ]);
+    }
+
+    public function map(Request $request)
+    {
+        $query = Property::where('is_active', true)
+            ->with(['images', 'location', 'user.subscription.plan'])
+            ->orderBy('created_at', 'desc');
+
+        // Filter by distance if lat/lng provided
+        if ($request->has('lat') && $request->has('lng') && $request->has('radius_km')) {
+            $lat = $request->lat;
+            $lng = $request->lng;
+            $radius = $request->radius_km;
+
+            $query->whereHas('location', function ($q) use ($lat, $lng, $radius) {
+                $q->whereRaw(
+                    '(6371 * acos(cos(radians(?)) * cos(radians(location_lat)) * cos(radians(location_lng) - radians(?)) + sin(radians(?)) * sin(radians(location_lat)))) <= ?',
+                    [$lat, $lng, $lat, $radius]
+                );
+            });
+        }
+
+        $properties = $query->get();
+
+        return inertia('Public/MapPage', [
+            'properties' => $properties,
+        ]);
+    }
+
     public function show(Request $request, Property $property)
     {
         if (! $property->is_active) {
             abort(404);
         }
 
-        $property->load(['images', 'location', 'user']);
+        $property->load(['images', 'location', 'user:id,name,email,profile_picture']);
 
         return inertia('Public/PropertyDetailsPage', [
             'property' => $property,

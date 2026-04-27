@@ -13,6 +13,10 @@ use Inertia\Inertia;
 
 Route::get('/', [PropertyController::class, 'publicIndex'])->name('home');
 
+Route::get('/listings', [PropertyController::class, 'allListings'])->name('listings.index');
+
+Route::get('/map', [PropertyController::class, 'map'])->name('map.index');
+
 Route::get('/properties/{property}', [PropertyController::class, 'show'])->name('properties.show');
 
 Route::get('/register', function () {
@@ -35,6 +39,7 @@ Route::get('/unverified-access', function () {
 Route::get('/profile', [ProfileController::class, 'show'])->middleware('auth')->name('profile');
 Route::patch('/profile', [ProfileController::class, 'updateInfo'])->middleware('auth')->name('profile.update');
 Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->middleware('auth')->name('profile.password');
+Route::post('/profile/picture', [ProfileController::class, 'updateProfilePicture'])->middleware('auth')->name('profile.picture');
 
 Route::get('/seller/dashboard', [PropertyController::class, 'dashboard'])
     ->middleware('seller')

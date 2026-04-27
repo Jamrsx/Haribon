@@ -17,9 +17,12 @@ export default function EditPropertyPage() {
         title: property.title || '',
         description: property.description || '',
         contact: property.contact || '',
+        type: property.type || 'sale',
         lot_area_sqm: property.lot_area_sqm || '',
         price_total: property.price_total || '',
         price_per_sqm: property.price_per_sqm || '',
+        rental_period: property.rental_period || '',
+        lease_duration_months: property.lease_duration_months || '',
         location_lat: property.location?.location_lat || '',
         location_lng: property.location?.location_lng || '',
         address: property.location?.address || '',
@@ -68,9 +71,12 @@ export default function EditPropertyPage() {
         formData.append('title', data.title);
         formData.append('description', data.description);
         formData.append('contact', data.contact);
+        formData.append('type', data.type);
         formData.append('lot_area_sqm', data.lot_area_sqm);
         formData.append('price_total', data.price_total);
         formData.append('price_per_sqm', data.price_per_sqm);
+        formData.append('rental_period', data.rental_period);
+        formData.append('lease_duration_months', data.lease_duration_months);
         formData.append('location_lat', data.location_lat);
         formData.append('location_lng', data.location_lng);
         formData.append('address', data.address);
@@ -147,6 +153,48 @@ export default function EditPropertyPage() {
                     <h2 className="text-lg font-semibold text-slate-900">Basic Information</h2>
                     <div className="mt-4 space-y-4">
                         <div>
+                            <label className="mb-2 block text-sm font-medium text-slate-700">
+                                Property Type *
+                            </label>
+                            <div className="flex rounded-lg border border-slate-300 p-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setData('type', 'sale')}
+                                    className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                                        data.type === 'sale'
+                                            ? 'bg-emerald-600 text-white'
+                                            : 'text-slate-600 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    For Sale
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setData('type', 'rent')}
+                                    className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                                        data.type === 'rent'
+                                            ? 'bg-emerald-600 text-white'
+                                            : 'text-slate-600 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    For Rent
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setData('type', 'lease')}
+                                    className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                                        data.type === 'lease'
+                                            ? 'bg-emerald-600 text-white'
+                                            : 'text-slate-600 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    For Lease
+                                </button>
+                            </div>
+                            {errors.type ? <p className="mt-1 text-xs text-rose-600">{errors.type}</p> : null}
+                        </div>
+
+                        <div>
                             <label htmlFor="title" className="mb-1 block text-sm font-medium text-slate-700">
                                 Property Title *
                             </label>
@@ -211,25 +259,27 @@ export default function EditPropertyPage() {
                 <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 className="text-lg font-semibold text-slate-900">Property Details</h2>
                     <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <label htmlFor="lot_area_sqm" className="mb-1 block text-sm font-medium text-slate-700">
-                                Lot Area (sqm)
-                            </label>
-                            <input
-                                id="lot_area_sqm"
-                                type="number"
-                                step="0.01"
-                                value={data.lot_area_sqm}
-                                onChange={(e) => setData('lot_area_sqm', e.target.value)}
-                                className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
-                                placeholder="e.g., 150"
-                            />
-                            {errors.lot_area_sqm ? <p className="mt-1 text-xs text-rose-600">{errors.lot_area_sqm}</p> : null}
-                        </div>
+                        {data.type === 'sale' && (
+                            <div>
+                                <label htmlFor="lot_area_sqm" className="mb-1 block text-sm font-medium text-slate-700">
+                                    Lot Area (sqm)
+                                </label>
+                                <input
+                                    id="lot_area_sqm"
+                                    type="number"
+                                    step="0.01"
+                                    value={data.lot_area_sqm}
+                                    onChange={(e) => setData('lot_area_sqm', e.target.value)}
+                                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
+                                    placeholder="e.g., 150"
+                                />
+                                {errors.lot_area_sqm ? <p className="mt-1 text-xs text-rose-600">{errors.lot_area_sqm}</p> : null}
+                            </div>
+                        )}
 
                         <div>
                             <label htmlFor="price_total" className="mb-1 block text-sm font-medium text-slate-700">
-                                Total Price (₱) *
+                                {data.type === 'sale' ? 'Total Price (₱) *' : data.type === 'rent' ? 'Rent Price (₱) *' : 'Lease Price (₱) *'}
                             </label>
                             <input
                                 id="price_total"
@@ -244,22 +294,71 @@ export default function EditPropertyPage() {
                             {errors.price_total ? <p className="mt-1 text-xs text-rose-600">{errors.price_total}</p> : null}
                         </div>
 
-                        <div className="sm:col-span-2">
-                            <label htmlFor="price_per_sqm" className="mb-1 block text-sm font-medium text-slate-700">
-                                Price per sqm (₱) *
-                            </label>
-                            <input
-                                id="price_per_sqm"
-                                type="number"
-                                step="0.01"
-                                value={data.price_per_sqm}
-                                onChange={(e) => setData('price_per_sqm', e.target.value)}
-                                className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
-                                placeholder="e.g., 36666.67"
-                                required
-                            />
-                            {errors.price_per_sqm ? <p className="mt-1 text-xs text-rose-600">{errors.price_per_sqm}</p> : null}
-                        </div>
+                        {data.type === 'sale' && (
+                            <div className="sm:col-span-2">
+                                <label htmlFor="price_per_sqm" className="mb-1 block text-sm font-medium text-slate-700">
+                                    Price per sqm (₱) *
+                                </label>
+                                <input
+                                    id="price_per_sqm"
+                                    type="number"
+                                    step="0.01"
+                                    value={data.price_per_sqm}
+                                    onChange={(e) => setData('price_per_sqm', e.target.value)}
+                                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
+                                    placeholder="e.g., 36666.67"
+                                    required
+                                />
+                                {errors.price_per_sqm ? <p className="mt-1 text-xs text-rose-600">{errors.price_per_sqm}</p> : null}
+                            </div>
+                        )}
+
+                        {(data.type === 'rent' || data.type === 'lease') && (
+                            <div>
+                                <label htmlFor="rental_period" className="mb-1 block text-sm font-medium text-slate-700">
+                                    Rental Period *
+                                </label>
+                                <select
+                                    id="rental_period"
+                                    value={data.rental_period}
+                                    onChange={(e) => setData('rental_period', e.target.value)}
+                                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
+                                    required
+                                >
+                                    <option value="">Select period</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="quarterly">Quarterly</option>
+                                    <option value="yearly">Yearly</option>
+                                </select>
+                                {errors.rental_period ? <p className="mt-1 text-xs text-rose-600">{errors.rental_period}</p> : null}
+                            </div>
+                        )}
+
+                        {data.type === 'lease' && (
+                            <div>
+                                <label htmlFor="lease_duration_months" className="mb-1 block text-sm font-medium text-slate-700">
+                                    Lease Duration (months) *
+                                </label>
+                                <input
+                                    id="lease_duration_months"
+                                    type="number"
+                                    min="1"
+                                    value={data.lease_duration_months}
+                                    onChange={(e) => setData('lease_duration_months', e.target.value)}
+                                    className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
+                                    placeholder="e.g., 12"
+                                    required
+                                />
+                                {errors.lease_duration_months ? <p className="mt-1 text-xs text-rose-600">{errors.lease_duration_months}</p> : null}
+                                {data.lease_duration_months && data.rental_period && data.price_total && (
+                                    <div className="mt-2 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800">
+                                        <p className="font-medium">
+                                            Pay ₱{Number(data.price_total).toLocaleString()} per {data.rental_period} for {data.lease_duration_months} months = {(parseInt(data.lease_duration_months) / 12).toFixed(1)} years
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 

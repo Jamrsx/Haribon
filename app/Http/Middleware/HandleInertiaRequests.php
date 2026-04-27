@@ -39,13 +39,23 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => fn () => $request->user()
-                    ? [
-                        'id' => $request->user()->id,
-                        'name' => $request->user()->name,
-                        'email' => $request->user()->email,
-                        'phone' => $request->user()->phone,
-                        'roles' => $request->user()->roles()->pluck('name')->values()->all(),
-                    ]
+                    ? array_merge(
+                        [
+                            'id' => $request->user()->id,
+                            'name' => $request->user()->name,
+                            'email' => $request->user()->email,
+                            'phone' => $request->user()->phone,
+                            'roles' => $request->user()->roles()->pluck('name')->values()->all(),
+                        ],
+                        $request->user()->subscription ? [
+                            'subscription' => [
+                                'status' => $request->user()->subscription->status,
+                                'plan' => [
+                                    'duration_days' => $request->user()->subscription->plan->duration_days,
+                                ],
+                            ],
+                        ] : []
+                    )
                     : null,
             ],
             'flash' => [

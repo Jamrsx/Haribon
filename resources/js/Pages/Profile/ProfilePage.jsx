@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import MainLayout from '../../Layouts/MainLayout';
 import Toast from '../../Components/UI/Toast';
 
@@ -23,9 +23,8 @@ function EyeIcon({ open }) {
     );
 }
 
-export default function ProfilePage() {
-    const { auth, flash } = usePage().props;
-    const user = auth?.user;
+export default function ProfilePage({ user }) {
+    const { flash } = usePage().props;
     const [toast, setToast] = useState({ show: false, type: 'info', message: '' });
     const infoForm = useForm({
         name: user?.name ?? '',
@@ -37,11 +36,57 @@ export default function ProfilePage() {
         password: '',
         password_confirmation: '',
     });
+    const profilePictureForm = useForm({
+        profile_picture: null,
+    });
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [previewImage, setPreviewImage] = useState(null);
     const isSeller = useMemo(() => (user?.roles ?? []).includes('seller'), [user?.roles]);
     const backHref = isSeller ? '/seller/dashboard' : '/buyer/favorites';
+
+    const isPremium = useMemo(() => {
+        if (!user?.subscription) return false;
+        const subscription = user.subscription;
+        const plan = subscription.plan;
+        if (!plan) return false;
+        // Premium if they have an active 1-year subscription (365 days) or lifetime plan
+        return subscription.status === 'active' && (plan.duration_days >= 365 || plan.duration_days === 0);
+    }, [user?.subscription]);
+
+    const isLifetime = useMemo(() => {
+        if (!user?.subscription) return false;
+        const subscription = user.subscription;
+        const plan = subscription.plan;
+        if (!plan) return false;
+        // Lifetime if they have an active lifetime subscription (9999 days or 0 for lifetime)
+        return subscription.status === 'active' && (plan.duration_days >= 9999 || plan.duration_days === 0);
+    }, [user?.subscription]);
+
+    const handleProfilePictureChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setPreviewImage(URL.createObjectURL(file));
+            profilePictureForm.setData('profile_picture', file);
+        }
+    };
+
+    const handleProfilePictureSubmit = (e) => {
+        e.preventDefault();
+        profilePictureForm.post('/profile/picture', {
+            onSuccess: () => {
+                setPreviewImage(null);
+                profilePictureForm.reset();
+                setToast({ show: true, type: 'success', message: 'Profile picture updated successfully' });
+                router.reload();
+            },
+            onError: () => {
+                const firstError = Object.values(profilePictureForm.errors)[0] || 'Unable to update profile picture.';
+                setToast({ show: true, type: 'error', message: firstError });
+            },
+        });
+    };
 
     useEffect(() => {
         console.log('ProfilePage loaded', user);
@@ -97,19 +142,50 @@ export default function ProfilePage() {
                     <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-6">
                         <div className="relative">
                             <img
-                                src="/storage/Hari/haribon-smile.png"
+                                src={previewImage || (user?.profile_picture ? `/storage/${user.profile_picture}` : '/storage/Hari/haribon-smile.png')}
                                 alt="Profile"
                                 className="h-24 w-24 rounded-full border-4 border-white object-cover shadow-lg sm:h-32 sm:w-32"
+                                onError={(e) => {
+                                    e.target.src = '/storage/Hari/haribon-smile.png';
+                                }}
                             />
-                            <div className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-white border-2 border-emerald-500 flex items-center justify-center shadow-md">
+                            <label htmlFor="profile-picture-upload" className="absolute bottom-0 right-0 h-8 w-8 cursor-pointer rounded-full bg-white border-2 border-emerald-500 flex items-center justify-center shadow-md hover:bg-emerald-50 transition-colors">
                                 <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                 </svg>
-                            </div>
+                            </label>
+                            <input
+                                id="profile-picture-upload"
+                                type="file"
+                                accept="image/jpeg,image/png,image/jpg,image/gif"
+                                onChange={handleProfilePictureChange}
+                                className="hidden"
+                            />
                         </div>
                         <div className="text-center sm:text-left">
                             <h1 className="text-2xl font-bold text-white sm:text-3xl">{user?.name ?? 'User'}</h1>
                             <p className="mt-1 text-emerald-100">{user?.email ?? ''}</p>
+                            {previewImage && (
+                                <form onSubmit={handleProfilePictureSubmit} className="mt-2">
+                                    <button
+                                        type="submit"
+                                        disabled={profilePictureForm.processing}
+                                        className="inline-flex items-center rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-emerald-600 hover:bg-emerald-50 disabled:opacity-50 transition-colors"
+                                    >
+                                        {profilePictureForm.processing ? 'Uploading...' : 'Save Picture'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setPreviewImage(null);
+                                            profilePictureForm.reset();
+                                        }}
+                                        className="ml-2 inline-flex items-center rounded-lg bg-white/20 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/30 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                </form>
+                            )}
                             <div className="mt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
                                 {isSeller && (
                                     <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
@@ -117,6 +193,38 @@ export default function ProfilePage() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                         Seller
+                                    </span>
+                                )}
+                                {isPremium && (
+                                    <span className="inline-flex items-center rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-amber-900 backdrop-blur-sm">
+                                        <svg className="mr-1.5 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                        </svg>
+                                        Premium Subs
+                                    </span>
+                                )}
+                                {isPremium && (
+                                    <span className="inline-flex items-center rounded-full bg-purple-400 px-3 py-1 text-xs font-semibold text-purple-900 backdrop-blur-sm">
+                                        <svg className="mr-1.5 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                                        </svg>
+                                        Dev Supporter
+                                    </span>
+                                )}
+                                {isPremium && (
+                                    <span className="inline-flex items-center rounded-full bg-rose-400 px-3 py-1 text-xs font-semibold text-rose-900 backdrop-blur-sm">
+                                        <svg className="mr-1.5 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                        </svg>
+                                        Saviour
+                                    </span>
+                                )}
+                                {isLifetime && (
+                                    <span className="inline-flex items-center rounded-full bg-emerald-400 px-3 py-1 text-xs font-semibold text-emerald-900 backdrop-blur-sm">
+                                        <svg className="mr-1.5 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                                        </svg>
+                                        Loyal Seller
                                     </span>
                                 )}
                             </div>

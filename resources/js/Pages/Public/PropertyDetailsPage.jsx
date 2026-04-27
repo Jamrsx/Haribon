@@ -87,9 +87,21 @@ export default function PropertyDetailsPage({ property }) {
 
                                 {property?.user && (
                                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Seller</p>
-                                        <p className="mt-1 text-sm font-medium text-slate-900">{property.user.name}</p>
-                                        <p className="text-xs text-slate-600">{property.user.email}</p>
+                                        <div className="flex items-start gap-3">
+                                            <img
+                                                src={property.user.profile_picture ? `/storage/${property.user.profile_picture}` : '/storage/Hari/haribon-smile.png'}
+                                                alt="Seller"
+                                                className="h-12 w-12 rounded-full border-2 border-white object-cover shadow-sm"
+                                                onError={(e) => {
+                                                    e.target.src = '/storage/Hari/haribon-smile.png';
+                                                }}
+                                            />
+                                            <div className="flex-1">
+                                                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Seller</p>
+                                                <p className="mt-1 text-sm font-medium text-slate-900">{property.user.name}</p>
+                                                <p className="text-xs text-slate-600">{property.user.email}</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
                             </div>

@@ -4,15 +4,20 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProfileController extends Controller
 {
-    public function show(): Response
+    public function show(Request $request): Response
     {
-        return Inertia::render('Profile/ProfilePage');
+        $user = $request->user()->load('subscription.plan');
+
+        return Inertia::render('Profile/ProfilePage', [
+            'user' => $user->only(['id', 'name', 'email', 'phone', 'profile_picture', 'roles', 'subscription']),
+        ]);
     }
 
     public function updateInfo(Request $request): RedirectResponse
@@ -53,5 +58,28 @@ class ProfileController extends Controller
         ]);
 
         return back()->with('success', 'Password updated successfully.');
+    }
+
+    public function updateProfilePicture(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'profile_picture' => ['required', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+        ]);
+
+        $user = $request->user();
+
+        // Delete old profile picture if exists
+        if ($user->profile_picture) {
+            Storage::disk('public')->delete($user->profile_picture);
+        }
+
+        // Store new profile picture
+        $path = $validated['profile_picture']->store('profile/' . $user->id, 'public');
+
+        $user->update([
+            'profile_picture' => $path,
+        ]);
+
+        return back()->with('success', 'Profile picture updated successfully.');
     }
 }

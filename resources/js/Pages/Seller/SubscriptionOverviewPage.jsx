@@ -36,13 +36,13 @@ export default function SubscriptionOverviewPage({ activeSubscription, paymentHi
                                     <div>
                                         <p className="text-xs text-slate-500 uppercase tracking-wide">Property Listings</p>
                                         <p className="mt-1 text-lg font-semibold text-slate-900">
-                                            {activeSubscription.plan.max_listing === 999 ? 'Unlimited' : activeSubscription.plan.max_listing}
+                                            {activeSubscription.plan.max_listing === 999999 ? 'Unlimited' : activeSubscription.plan.max_listing}
                                         </p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-slate-500 uppercase tracking-wide">Images per Listing</p>
                                         <p className="mt-1 text-lg font-semibold text-slate-900">
-                                            {activeSubscription.plan.max_images === 999 ? 'Unlimited' : activeSubscription.plan.max_images}
+                                            {activeSubscription.plan.max_images === 999999 ? 'Unlimited' : activeSubscription.plan.max_images}
                                         </p>
                                     </div>
                                 </div>
