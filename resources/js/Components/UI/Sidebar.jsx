@@ -61,6 +61,7 @@ export default function Sidebar({ collapsed, onToggle }) {
     const currentUrl = page.url ?? '';
     const auth = page.props?.auth;
     const [showAccountMenu, setShowAccountMenu] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
     const user = auth?.user;
     const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
     const currentPath = currentUrl.split('?')[0] || '';
@@ -136,14 +137,13 @@ export default function Sidebar({ collapsed, onToggle }) {
                             >
                                 Profile Overview
                             </Link>
-                            <Link
-                                href="/logout"
-                                method="post"
-                                as="button"
+                            <button
+                                type="button"
+                                onClick={() => setShowLogoutModal(true)}
                                 className="block w-full rounded-md px-3 py-2 text-left text-sm font-medium text-rose-300 hover:bg-slate-700"
                             >
                                 Logout
-                            </Link>
+                            </button>
                         </div>
                     ) : null}
 
@@ -181,6 +181,32 @@ export default function Sidebar({ collapsed, onToggle }) {
                         ) : null}
                     </button>
                 </div>
+
+                {showLogoutModal ? (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                        <div className="w-full max-w-sm rounded-lg border border-slate-700 bg-slate-800 p-6 shadow-xl">
+                            <h3 className="mb-2 text-lg font-semibold text-white">Confirm Logout</h3>
+                            <p className="mb-6 text-sm text-slate-300">Are you sure you want to log out of your account?</p>
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowLogoutModal(false)}
+                                    className="rounded-lg border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-700"
+                                >
+                                    Cancel
+                                </button>
+                                <Link
+                                    href="/logout"
+                                    method="post"
+                                    as="button"
+                                    className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
+                                >
+                                    Logout
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                ) : null}
             </div>
         </aside>
     );

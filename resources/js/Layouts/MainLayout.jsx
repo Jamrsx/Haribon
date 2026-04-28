@@ -5,6 +5,7 @@ export default function MainLayout({ children, showBackToDashboard = false }) {
     const { auth } = usePage().props;
     const user = auth?.user;
     const [showProfileMenu, setShowProfileMenu] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
     const isSeller = (user?.roles ?? []).includes('seller');
     const backHref = isSeller ? '/seller/dashboard' : '/buyer/favorites';
 
@@ -40,14 +41,13 @@ export default function MainLayout({ children, showBackToDashboard = false }) {
                                         >
                                             Profile
                                         </Link>
-                                        <Link
-                                            href="/logout"
-                                            method="post"
-                                            as="button"
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowLogoutModal(true)}
                                             className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-rose-700 hover:bg-rose-50"
                                         >
                                             Logout
-                                        </Link>
+                                        </button>
                                     </div>
                                 ) : null}
                             </div>
@@ -78,6 +78,32 @@ export default function MainLayout({ children, showBackToDashboard = false }) {
             </header>
 
             <main>{children}</main>
+
+            {showLogoutModal ? (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-6 shadow-xl">
+                        <h3 className="mb-2 text-lg font-semibold text-slate-900">Confirm Logout</h3>
+                        <p className="mb-6 text-sm text-slate-600">Are you sure you want to log out of your account?</p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowLogoutModal(false)}
+                                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                            >
+                                Cancel
+                            </button>
+                            <Link
+                                href="/logout"
+                                method="post"
+                                as="button"
+                                className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
+                            >
+                                Logout
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
 
             <footer className="border-t border-emerald-100 bg-white">
                 <div className="mx-auto w-full max-w-7xl px-4 py-6 text-sm text-slate-600 sm:px-6 lg:px-8">
