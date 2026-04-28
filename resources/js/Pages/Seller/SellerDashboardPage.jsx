@@ -6,7 +6,7 @@ import Toast from '../../Components/UI/Toast';
 export default function SellerDashboardPage() {
     const { props } = usePage();
     const user = props.auth?.user;
-    const stats = props.stats || { total_properties: 0, active_listings: 0 };
+    const stats = props.stats || { total_properties: 0, active_listings: 0, seller_rating: 0, total_reviews: 0 };
     const recentProperties = props.recent_properties || [];
     const monthlyData = props.monthly_data || [];
     const subscription = props.subscription || { plan_name: 'Free', current_listings: 0, max_listings: 1 };
@@ -68,7 +68,7 @@ export default function SellerDashboardPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <p className="text-sm font-medium text-slate-600">Total Properties</p>
                     <p className="mt-2 text-2xl font-bold text-slate-900">{stats.total_properties}</p>
@@ -80,6 +80,17 @@ export default function SellerDashboardPage() {
                 <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <p className="text-sm font-medium text-slate-600">Inactive Listings</p>
                     <p className="mt-2 text-2xl font-bold text-slate-900">{stats.total_properties - stats.active_listings}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p className="text-sm font-medium text-slate-600">Seller Rating</p>
+                    <div className="mt-2 flex items-center gap-2">
+                        <span className="text-2xl font-bold text-slate-900">{stats.seller_rating}</span>
+                        <span className="text-amber-400 text-lg">
+                            {'★'.repeat(Math.round(stats.seller_rating))}
+                            {'☆'.repeat(5 - Math.round(stats.seller_rating))}
+                        </span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">{stats.total_reviews} reviews</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <p className="text-sm font-medium text-slate-600">Recent Activity</p>

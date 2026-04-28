@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ReviewVerificationMail;
 use App\Models\Property;
 use App\Models\Review;
 use App\Models\User;
@@ -21,13 +22,21 @@ class ReviewController extends Controller
 
         $seller = $property->user;
 
-        $existingReview = Review::where('email', $validated['email'])
+        $existingPropertyReview = Review::where('email', $validated['email'])
             ->where('seller_id', $seller->id)
             ->where('property_id', $property->id)
             ->first();
 
-        if ($existingReview) {
-            return back()->with('error', 'You have already reviewed this property.');
+        if ($existingPropertyReview) {
+            return back()->withErrors(['email' => 'You have already reviewed this property.']);
+        }
+
+        $existingSellerReview = Review::where('email', $validated['email'])
+            ->where('seller_id', $seller->id)
+            ->first();
+
+        if ($existingSellerReview) {
+            return back()->withErrors(['email' => 'You have already reviewed this seller.']);
         }
 
         $verificationToken = Str::random(64);
@@ -44,13 +53,7 @@ class ReviewController extends Controller
 
         $verificationUrl = route('reviews.verify', $verificationToken);
 
-        Mail::raw(
-            "Thank you for your review!\n\nPlease click the link below to verify your review:\n{$verificationUrl}\n\nThis link will expire in 48 hours.",
-            function ($message) use ($validated) {
-                $message->to($validated['email'])
-                    ->subject('Verify Your Review - Haribon Real Estate');
-            }
-        );
+        Mail::to($validated['email'])->send(new ReviewVerificationMail($verificationUrl, $review));
 
         return back()->with('success', 'Review submitted! Please check your email to verify.');
     }

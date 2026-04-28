@@ -372,6 +372,13 @@ class PropertyController extends Controller
             $planName = 'Free';
         }
 
+        // Calculate seller rating from verified reviews
+        $sellerReviews = \App\Models\Review::where('seller_id', $user->id)
+            ->where('verified', true)
+            ->get();
+        $averageRating = $sellerReviews->avg('rating') ?? 0;
+        $totalReviews = $sellerReviews->count();
+
         // Calculate properties created in last 6 months
         $monthlyData = [];
         for ($i = 5; $i >= 0; $i--) {
@@ -389,6 +396,8 @@ class PropertyController extends Controller
             'stats' => [
                 'total_properties' => $totalProperties,
                 'active_listings' => $activeListings,
+                'seller_rating' => round($averageRating, 1),
+                'total_reviews' => $totalReviews,
             ],
             'recent_properties' => $recentProperties,
             'monthly_data' => $monthlyData,

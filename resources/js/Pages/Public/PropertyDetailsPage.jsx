@@ -26,7 +26,6 @@ export default function PropertyDetailsPage({ property, reviews, averageRating, 
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        setData('rating', rating);
         post(`/properties/${property.id}/reviews`);
     };
 
@@ -325,7 +324,10 @@ export default function PropertyDetailsPage({ property, reviews, averageRating, 
                                                 type="button"
                                                 onMouseEnter={() => setHoverRating(star)}
                                                 onMouseLeave={() => setHoverRating(0)}
-                                                onClick={() => setRating(star)}
+                                                onClick={() => {
+                                                    setRating(star);
+                                                    setData('rating', star);
+                                                }}
                                                 className="text-2xl transition-colors"
                                             >
                                                 <span

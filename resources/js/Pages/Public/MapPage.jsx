@@ -170,7 +170,7 @@ export default function MapPage() {
     const properties = props.properties || [];
     const [selectedProperty, setSelectedProperty] = useState(null);
     const [userLocation, setUserLocation] = useState(null);
-    const [radius, setRadius] = useState(props.radius_km || 10);
+    const [radius, setRadius] = useState(props.radius_km || 2);
     const [loadingNearMe, setLoadingNearMe] = useState(false);
     const [filterType, setFilterType] = useState('all');
     const mapKey = useRef(0);
@@ -324,15 +324,15 @@ export default function MapPage() {
                                         </div>
                                         <input
                                             type="range"
-                                            min="10"
+                                            min="2"
                                             max="100"
-                                            step="5"
+                                            step="1"
                                             value={radius}
                                             onChange={(e) => handleRadiusChange(parseInt(e.target.value))}
                                             className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                                         />
                                         <div className="mt-1 flex justify-between text-[10px] text-slate-500">
-                                            <span>10 km</span>
+                                            <span>2 km</span>
                                             <span>100 km</span>
                                         </div>
                                     </div>
