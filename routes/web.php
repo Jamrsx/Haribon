@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginUserController;
 use App\Http\Controllers\Auth\LogoutUserController;
 use App\Http\Controllers\Auth\RegisterUserController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
@@ -38,6 +40,11 @@ Route::get('/login', function () {
 
 Route::post('/login', LoginUserController::class);
 Route::post('/logout', LogoutUserController::class)->name('logout');
+
+Route::get('/forgot-password', [ForgotPasswordController::class, 'show'])->name('password.request');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'send'])->name('password.email');
+Route::get('/reset-password/{token}', [ResetPasswordController::class, 'show'])->name('password.reset');
+Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 
 Route::get('/unverified-access', function () {
     return Inertia::render('Auth/UnverifiedAccessPage');

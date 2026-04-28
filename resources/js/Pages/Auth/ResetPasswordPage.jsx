@@ -23,31 +23,20 @@ function EyeIcon({ open }) {
     );
 }
 
-export default function LoginPage() {
-    const { data, setData, post, processing, errors } = useForm({
-        email: '',
+export default function ResetPasswordPage({ token, email }) {
+    const { data, setData, post, processing, errors, recentlySuccessful } = useForm({
+        token: token,
+        email: email,
         password: '',
-        remember: false,
+        password_confirmation: '',
     });
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [toast, setToast] = useState({
         show: false,
         type: 'info',
         message: '',
     });
-
-    useEffect(() => {
-        // Check for success messages from redirects (e.g., after password reset)
-        const urlParams = new URLSearchParams(window.location.search);
-        const success = urlParams.get('success');
-        const error = urlParams.get('error');
-        
-        if (success) {
-            setToast({ show: true, type: 'success', message: success });
-        } else if (error) {
-            setToast({ show: true, type: 'error', message: error });
-        }
-    }, []);
 
     useEffect(() => {
         const firstError = Object.values(errors)[0];
@@ -56,15 +45,20 @@ export default function LoginPage() {
         }
     }, [errors]);
 
+    useEffect(() => {
+        if (recentlySuccessful) {
+            setToast({ show: true, type: 'success', message: 'Password reset successfully! Redirecting to login...' });
+        }
+    }, [recentlySuccessful]);
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log('Login submit payload', data);
-        post('/login');
+        post('/reset-password');
     };
 
     return (
-        <AuthLayout title="Login to your account" subtitle="Seller accounts redirect to dashboard. Buyer accounts redirect to favorites.">
-            <Head title="Login" />
+        <AuthLayout title="Set new password" subtitle="Create a strong password for your account.">
+            <Head title="Reset Password" />
             <Toast
                 show={toast.show}
                 type={toast.type}
@@ -81,16 +75,14 @@ export default function LoginPage() {
                         id="email"
                         type="email"
                         value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
-                        required
+                        disabled
+                        className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-500 outline-none"
                     />
-                    {errors.email ? <p className="mt-1 text-xs text-rose-600">{errors.email}</p> : null}
                 </div>
 
                 <div>
                     <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-700">
-                        Password
+                        New Password
                     </label>
                     <div className="relative">
                         <input
@@ -99,6 +91,7 @@ export default function LoginPage() {
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
                             className="w-full rounded-xl border border-slate-300 px-3 py-2.5 pr-11 text-sm outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
+                            placeholder="Enter new password"
                             required
                         />
                         <button
@@ -113,37 +106,45 @@ export default function LoginPage() {
                     {errors.password ? <p className="mt-1 text-xs text-rose-600">{errors.password}</p> : null}
                 </div>
 
-                <label className="flex items-center gap-2 text-sm text-slate-600">
-                    <input
-                        type="checkbox"
-                        checked={data.remember}
-                        onChange={(e) => setData('remember', e.target.checked)}
-                        className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                    />
-                    Remember me
-                </label>
+                <div>
+                    <label htmlFor="password_confirmation" className="mb-1 block text-sm font-medium text-slate-700">
+                        Confirm New Password
+                    </label>
+                    <div className="relative">
+                        <input
+                            id="password_confirmation"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            value={data.password_confirmation}
+                            onChange={(e) => setData('password_confirmation', e.target.value)}
+                            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 pr-11 text-sm outline-none ring-emerald-200 focus:border-emerald-500 focus:ring"
+                            placeholder="Confirm new password"
+                            required
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword((prev) => !prev)}
+                            className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-slate-500 hover:text-emerald-700"
+                            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                        >
+                            <EyeIcon open={showConfirmPassword} />
+                        </button>
+                    </div>
+                    {errors.password_confirmation ? <p className="mt-1 text-xs text-rose-600">{errors.password_confirmation}</p> : null}
+                </div>
 
                 <button
                     type="submit"
                     disabled={processing}
                     className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                    {processing ? 'Logging in...' : 'Login'}
+                    {processing ? 'Resetting...' : 'Reset Password'}
                 </button>
 
-                <div className="space-y-3">
-                    <p className="text-center text-sm text-slate-600">
-                        <Link href="/forgot-password" className="font-semibold text-emerald-700 hover:text-emerald-800">
-                            Forgot your password?
-                        </Link>
-                    </p>
-                    <p className="text-center text-sm text-slate-600">
-                        No account yet?{' '}
-                        <Link href="/register" className="font-semibold text-emerald-700 hover:text-emerald-800">
-                            Register
-                        </Link>
-                    </p>
-                </div>
+                <p className="text-center text-sm text-slate-600">
+                    <Link href="/login" className="font-semibold text-emerald-700 hover:text-emerald-800">
+                        Back to login
+                    </Link>
+                </p>
             </form>
         </AuthLayout>
     );
