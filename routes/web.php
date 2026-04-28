@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\LoginUserController;
 use App\Http\Controllers\Auth\LogoutUserController;
 use App\Http\Controllers\Auth\RegisterUserController;
+use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PropertyController;
@@ -25,6 +26,11 @@ Route::get('/register', function () {
 })->name('register');
 
 Route::post('/register', RegisterUserController::class);
+
+Route::get('/verify-email', [EmailVerificationController::class, 'show'])->name('email.verification');
+Route::post('/email/send', [EmailVerificationController::class, 'send'])->name('email.send');
+Route::get('/email/verify/{token}', [EmailVerificationController::class, 'verify'])->name('email.verify');
+Route::post('/email/resend', [EmailVerificationController::class, 'resend'])->name('email.resend');
 
 Route::get('/login', function () {
     return Inertia::render('Auth/LoginPage');

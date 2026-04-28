@@ -28,6 +28,17 @@ class LoginUserController extends Controller
         $user = $request->user()->load('roles');
         $isSeller = $user->roles->contains('name', 'seller');
 
+        // Check if seller's email is verified
+        if ($isSeller && !$user->email_verified_at) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            
+            throw ValidationException::withMessages([
+                'email' => 'Please verify your email address before logging in. Check your inbox for the verification email.',
+            ]);
+        }
+
         if ($isSeller) {
             return redirect()->route('seller.dashboard')->with('loginSuccess', $user->name);
         }

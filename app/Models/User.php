@@ -14,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use Laravel\Passport\HasApiTokens;
 
-#[Fillable(['name', 'email', 'phone', 'password', 'profile_picture'])]
+#[Fillable(['name', 'email', 'phone', 'password', 'profile_picture', 'email_verified_at', 'email_verification_token', 'email_verification_expires_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -49,6 +49,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'email_verification_expires_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
