@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Head, Link, usePage, router } from '@inertiajs/react';
 import Header from '../../Components/UI/Header';
 import Footer from '../../Components/UI/Footer';
@@ -155,13 +155,36 @@ const getPropertyIcon = (type, isPremium, isLifetime, rating) => {
     });
 };
 
-function MapController({ center, zoom }) {
+function MapController({ center, zoom, onMapChange }) {
     const map = useMap();
+    const mapInitialized = useRef(false);
+    
     useEffect(() => {
-        if (center) {
+        // Only set view on initial load or when user location changes
+        if (center && !mapInitialized.current) {
             map.setView(center, zoom);
+            mapInitialized.current = true;
         }
-    }, [center, zoom, map]);
+        
+        // Listen for map changes
+        const handleMoveEnd = () => {
+            if (onMapChange) {
+                onMapChange({
+                    center: map.getCenter(),
+                    zoom: map.getZoom()
+                });
+            }
+        };
+        
+        map.on('moveend', handleMoveEnd);
+        map.on('zoomend', handleMoveEnd);
+        
+        return () => {
+            map.off('moveend', handleMoveEnd);
+            map.off('zoomend', handleMoveEnd);
+        };
+    }, [center, zoom, map, onMapChange]);
+    
     return null;
 }
 
@@ -169,12 +192,34 @@ export default function MapPage() {
     const { props } = usePage();
     const properties = props.properties || [];
     const [selectedProperty, setSelectedProperty] = useState(null);
-    const [userLocation, setUserLocation] = useState(null);
-    const [radius, setRadius] = useState(props.radius_km || 2);
+    const [userLocation, setUserLocation] = useState(() => {
+        // Try to get user location from URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const lat = urlParams.get('lat');
+        const lng = urlParams.get('lng');
+        return lat && lng ? { lat: parseFloat(lat), lng: parseFloat(lng) } : null;
+    });
+    const [radius, setRadius] = useState(() => {
+        // Try to get radius from URL params first, then props, then default
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlRadius = urlParams.get('radius_km');
+        return urlRadius ? parseInt(urlRadius) : (props.radius_km || 2);
+    });
     const [loadingNearMe, setLoadingNearMe] = useState(false);
     const [filterType, setFilterType] = useState('all');
     const mapKey = useRef(0);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const radiusTimeoutRef = useRef(null);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [mapState, setMapState] = useState(() => {
+        try {
+            const storedMapState = localStorage.getItem('mapState');
+            return storedMapState ? JSON.parse(storedMapState) : { center: null, zoom: null };
+        } catch (error) {
+            console.error("Error parsing map state from localStorage:", error);
+            return { center: null, zoom: null };
+        }
+    });
 
     const formatPrice = (price) => {
         return new Intl.NumberFormat('en-PH', {
@@ -215,11 +260,24 @@ export default function MapPage() {
 
     const handleRadiusChange = (newRadius) => {
         setRadius(newRadius);
-        if (userLocation) {
-            router.get('/map', { lat: userLocation.lat, lng: userLocation.lng, radius_km: newRadius }, {
-                preserveState: true,
-            });
+        
+        // Clear existing timeout
+        if (radiusTimeoutRef.current) {
+            clearTimeout(radiusTimeoutRef.current);
         }
+        
+        // Set new timeout for debounced API call
+        radiusTimeoutRef.current = setTimeout(() => {
+            if (userLocation) {
+                router.get('/map', { lat: userLocation.lat, lng: userLocation.lng, radius_km: newRadius }, {
+                    preserveState: true,
+                    preserveScroll: true,
+                    only: ['properties'],
+                    onStart: () => setIsUpdating(true),
+                    onFinish: () => setIsUpdating(false),
+                });
+            }
+        }, 200); // Shorter delay for responsive dragging
     };
 
     const handleShowAll = () => {
@@ -231,13 +289,19 @@ export default function MapPage() {
         ? properties
         : properties.filter((property) => property.type === filterType);
 
-    const mapCenter = userLocation 
-        ? [userLocation.lat, userLocation.lng]
-        : filteredProperties.length > 0 && filteredProperties[0].location
-            ? [filteredProperties[0].location.location_lat, filteredProperties[0].location.location_lng]
-            : [14.5995, 120.9842];
+    const mapCenter = mapState.center 
+        ? [mapState.center.lat, mapState.center.lng]
+        : userLocation 
+            ? [userLocation.lat, userLocation.lng]
+            : filteredProperties.length > 0 && filteredProperties[0].location
+                ? [filteredProperties[0].location.location_lat, filteredProperties[0].location.location_lng]
+                : [14.5995, 120.9842];
 
-    const mapZoom = userLocation ? 12 : 10;
+    const mapZoom = mapState.zoom !== null 
+        ? mapState.zoom 
+        : userLocation 
+            ? 12 
+            : 10;
 
     // Auto-rotate images every 5 seconds
     useEffect(() => {
@@ -253,6 +317,15 @@ export default function MapPage() {
     useEffect(() => {
         setCurrentImageIndex(0);
     }, [selectedProperty]);
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (radiusTimeoutRef.current) {
+                clearTimeout(radiusTimeoutRef.current);
+            }
+        };
+    }, []);
 
     const handlePrevImage = () => {
         if (selectedProperty && selectedProperty.images.length > 0) {
@@ -273,7 +346,6 @@ export default function MapPage() {
             <main className="flex-1">
                 <div className="h-[calc(100vh-64px)]">
                     <MapContainer
-                        key={mapKey.current}
                         center={mapCenter}
                         zoom={mapZoom}
                         style={{ height: '100%', width: '100%' }}
@@ -282,7 +354,18 @@ export default function MapPage() {
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
-                        <MapController center={mapCenter} zoom={mapZoom} />
+                        <MapController 
+            center={mapCenter} 
+            zoom={mapZoom} 
+            onMapChange={(newState) => {
+                setMapState(newState);
+                try {
+                    localStorage.setItem('mapState', JSON.stringify(newState));
+                } catch (error) {
+                    console.error("Error saving map state to localStorage:", error);
+                }
+            }}
+        />
                         
                         {/* Control Panel */}
                         <div className="absolute top-4 left-4 z-[1000] rounded-xl border border-slate-200 bg-white p-4 shadow-lg w-72">
@@ -320,7 +403,12 @@ export default function MapPage() {
                                     <div className="rounded-lg border border-slate-200 bg-white p-3">
                                         <div className="mb-2 flex items-center justify-between">
                                             <label className="text-xs font-medium text-slate-700">Search Radius</label>
-                                            <span className="text-xs font-semibold text-emerald-600">{radius} km</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-semibold text-emerald-600">{radius} km</span>
+                                                {isUpdating && (
+                                                    <div className="h-3 w-3 animate-spin rounded-full border border-emerald-600 border-t-transparent"></div>
+                                                )}
+                                            </div>
                                         </div>
                                         <input
                                             type="range"
