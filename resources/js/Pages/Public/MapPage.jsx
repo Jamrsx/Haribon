@@ -207,6 +207,10 @@ export default function MapPage() {
     });
     const [loadingNearMe, setLoadingNearMe] = useState(false);
     const [filterType, setFilterType] = useState('all');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedLocation, setSelectedLocation] = useState('');
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [suggestions, setSuggestions] = useState([]);
     const mapKey = useRef(0);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const radiusTimeoutRef = useRef(null);
@@ -228,6 +232,55 @@ export default function MapPage() {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
         }).format(price);
+    };
+
+    // Extract unique locations from properties
+    const getUniqueLocations = () => {
+        const locationSet = new Set();
+        properties.forEach(property => {
+            if (property.location?.address) {
+                // Extract city/municipality names from addresses
+                const addressParts = property.location.address.split(',').map(part => part.trim());
+                // Add each part that could be a location (city, municipality, barangay)
+                addressParts.forEach(part => {
+                    if (part.length > 2 && !part.match(/^\d/)) { // Exclude short parts and postal codes
+                        locationSet.add(part);
+                    }
+                });
+            }
+        });
+        return Array.from(locationSet).sort();
+    };
+
+    const uniqueLocations = getUniqueLocations();
+
+    // Handle search input and generate suggestions
+    const handleSearchChange = (value) => {
+        setSearchQuery(value);
+        setSelectedLocation('');
+        
+        if (value.trim().length > 0) {
+            const filteredSuggestions = uniqueLocations.filter(location => 
+                location.toLowerCase().includes(value.toLowerCase())
+            );
+            setSuggestions(filteredSuggestions.slice(0, 8)); // Limit to 8 suggestions
+            setShowSuggestions(true);
+        } else {
+            setSuggestions([]);
+            setShowSuggestions(false);
+        }
+    };
+
+    // Handle location selection
+    const handleLocationSelect = (location) => {
+        setSearchQuery(location);
+        setSelectedLocation(location);
+        setShowSuggestions(false);
+    };
+
+    // Close suggestions when clicking outside
+    const handleSearchBlur = () => {
+        setTimeout(() => setShowSuggestions(false), 200);
     };
 
     const handleNearMe = () => {
@@ -285,9 +338,22 @@ export default function MapPage() {
         router.get('/map', {}, { preserveState: true });
     };
 
-    const filteredProperties = filterType === 'all'
-        ? properties
-        : properties.filter((property) => property.type === filterType);
+    const filteredProperties = properties.filter((property) => {
+        // Filter by property type
+        if (filterType !== 'all' && property.type !== filterType) {
+            return false;
+        }
+
+        // Filter by selected location
+        if (selectedLocation.trim()) {
+            const locationMatch = property.location?.address?.toLowerCase().includes(selectedLocation.toLowerCase());
+            if (!locationMatch) {
+                return false;
+            }
+        }
+
+        return true;
+    });
 
     const mapCenter = mapState.center 
         ? [mapState.center.lat, mapState.center.lng]
@@ -382,7 +448,53 @@ export default function MapPage() {
                                 {filteredProperties.length} {filteredProperties.length === 1 ? 'property' : 'properties'}
                             </p>
                             
-                            <div className="mt-4 space-y-3">
+                            <div className="mt-4 space-y-4">
+                                {/* Search Bar with Autocomplete */}
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-700 mb-2">Search Location</label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => handleSearchChange(e.target.value)}
+                                            onBlur={handleSearchBlur}
+                                            onFocus={() => searchQuery.trim().length > 0 && setShowSuggestions(true)}
+                                            placeholder="Type location name (e.g., Opol, Bulao)..."
+                                            className="w-full px-3 py-2 pr-9 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                        />
+                                        <svg className="absolute right-3 top-2.5 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                        
+                                        {/* Autocomplete Suggestions */}
+                                        {showSuggestions && suggestions.length > 0 && (
+                                            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                                                {suggestions.map((suggestion, index) => (
+                                                    <button
+                                                        key={index}
+                                                        onClick={() => handleLocationSelect(suggestion)}
+                                                        className="w-full px-3 py-2 text-left text-sm hover:bg-emerald-50 focus:bg-emerald-50 focus:outline-none border-b border-slate-100 last:border-b-0"
+                                                    >
+                                                        <div className="flex items-center">
+                                                            <svg className="mr-2 h-3 w-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            </svg>
+                                                            {suggestion}
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    {selectedLocation && (
+                                        <p className="mt-1 text-xs text-emerald-600">
+                                            Showing properties in: <span className="font-semibold">{selectedLocation}</span>
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Property Type Filter */}
                                 <div className="flex items-center overflow-hidden rounded-lg border border-slate-200">
                                     {['all', 'sale', 'rent', 'lease'].map((type) => (
                                         <button
