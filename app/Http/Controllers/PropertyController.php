@@ -204,15 +204,31 @@ class PropertyController extends Controller
             'is_active' => $validated['is_active'] ?? true,
         ]);
 
-        $property->location->update([
-            'location_lat' => $validated['location_lat'],
-            'location_lng' => $validated['location_lng'],
-            'address' => $validated['address'],
-        ]);
+        if ($property->location) {
+            $property->location->update([
+                'location_lat' => $validated['location_lat'],
+                'location_lng' => $validated['location_lng'],
+                'address' => $validated['address'],
+            ]);
+        } else {
+            PropertyLocation::create([
+                'property_id' => $property->id,
+                'location_lat' => $validated['location_lat'],
+                'location_lng' => $validated['location_lng'],
+                'address' => $validated['address'],
+            ]);
+        }
 
-        $property->geometry->update([
-            'lot_area_sqm' => $validated['lot_area_sqm'],
-        ]);
+        if ($property->geometry) {
+            $property->geometry->update([
+                'lot_area_sqm' => $validated['lot_area_sqm'],
+            ]);
+        } else {
+            PropertyGeometry::create([
+                'property_id' => $property->id,
+                'lot_area_sqm' => $validated['lot_area_sqm'],
+            ]);
+        }
 
         // Delete marked images
         if ($request->has('delete_images')) {
