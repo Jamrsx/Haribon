@@ -16,7 +16,7 @@ class ProfileController extends Controller
         $user = $request->user()->load('subscription.plan');
 
         return Inertia::render('Profile/ProfilePage', [
-            'user' => $user->only(['id', 'name', 'email', 'phone', 'profile_picture', 'roles', 'subscription']),
+            'user' => $user->only(['id', 'name', 'email', 'phone', 'profile_picture', 'facebook_profile_link', 'roles', 'subscription']),
         ]);
     }
 
@@ -39,6 +39,7 @@ class ProfileController extends Controller
                 'max:30',
                 Rule::unique('users', 'phone')->ignore($user->id),
             ],
+            'facebook_profile_link' => ['nullable', 'string', 'url', 'max:255'],
         ]);
 
         $user->update($validated);

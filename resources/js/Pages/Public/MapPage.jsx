@@ -215,6 +215,15 @@ export default function MapPage() {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const radiusTimeoutRef = useRef(null);
     const [isUpdating, setIsUpdating] = useState(false);
+    const [legendCollapsed, setLegendCollapsed] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+        try {
+            const stored = localStorage.getItem('sidebarCollapsed');
+            return stored ? JSON.parse(stored) : false;
+        } catch (error) {
+            return false;
+        }
+    });
     const [mapState, setMapState] = useState(() => {
         try {
             const storedMapState = localStorage.getItem('mapState');
@@ -393,6 +402,15 @@ export default function MapPage() {
         };
     }, []);
 
+    // Persist sidebar collapsed state
+    useEffect(() => {
+        try {
+            localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
+        } catch (error) {
+            console.error("Error saving sidebar state to localStorage:", error);
+        }
+    }, [sidebarCollapsed]);
+
     const handlePrevImage = () => {
         if (selectedProperty && selectedProperty.images.length > 0) {
             setCurrentImageIndex((prev) => (prev - 1 + selectedProperty.images.length) % selectedProperty.images.length);
@@ -434,21 +452,53 @@ export default function MapPage() {
         />
                         
                         {/* Control Panel */}
-                        <div className="absolute top-4 left-4 z-[1000] rounded-xl border border-slate-200 bg-white p-4 shadow-lg w-72">
-                            <div className="mb-4">
-                                <Link
-                                    href="/"
-                                    className="inline-flex items-center text-sm font-medium text-emerald-700 hover:text-emerald-800"
+                        <div className={`absolute top-4 left-4 z-[1000] rounded-xl border border-slate-200 bg-white shadow-lg transition-all duration-300 ${sidebarCollapsed ? 'w-auto p-2' : 'w-72 p-4'}`}>
+                            <div className="flex items-center justify-between">
+                                {!sidebarCollapsed && (
+                                    <div className="mb-4 flex-1">
+                                        <Link
+                                            href="/"
+                                            className="inline-flex items-center text-sm font-medium text-emerald-700 hover:text-emerald-800"
+                                        >
+                                            ← Back to Home
+                                        </Link>
+                                    </div>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                                    className={`rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors ${sidebarCollapsed ? '' : 'mb-4'}`}
+                                    title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                                 >
-                                    ← Back to Home
-                                </Link>
+                                    <svg
+                                        className={`h-5 w-5 transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`}
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                                    </svg>
+                                </button>
                             </div>
-                            <h2 className="text-lg font-semibold text-slate-900">Property Map</h2>
-                            <p className="mt-1 text-xs text-slate-500">
-                                {filteredProperties.length} {filteredProperties.length === 1 ? 'property' : 'properties'}
-                            </p>
                             
-                            <div className="mt-4 space-y-4">
+                            {!sidebarCollapsed && (
+                                <>
+                                    <h2 className="text-lg font-semibold text-slate-900">Property Map</h2>
+                                    <p className="mt-1 text-xs text-slate-500">
+                                        {filteredProperties.length} {filteredProperties.length === 1 ? 'property' : 'properties'}
+                                    </p>
+                                </>
+                            )}
+                            
+                            {sidebarCollapsed && (
+                                <div className="text-center">
+                                    <p className="text-xs font-semibold text-slate-600">{filteredProperties.length}</p>
+                                    <p className="text-[10px] text-slate-400">props</p>
+                                </div>
+                            )}
+                            
+                            {!sidebarCollapsed && (
+                                <div className="mt-4 space-y-4">
                                 {/* Search Bar with Autocomplete */}
                                 <div>
                                     <label className="block text-xs font-medium text-slate-700 mb-2">Search Location</label>
@@ -556,31 +606,52 @@ export default function MapPage() {
                                     )}
                                 </div>
                             </div>
+                            )}
                             
+                            {!sidebarCollapsed && (
+                            <>
                             {/* Legend */}
                             <div className="mt-4 pt-4 border-t border-slate-200">
-                                <p className="text-xs font-medium text-slate-700 mb-2">Legend</p>
-                                <div className="space-y-1.5">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                                        <span className="text-xs text-slate-600">For Sale</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                                        <span className="text-xs text-slate-600">For Rent</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                                        <span className="text-xs text-slate-600">For Lease</span>
-                                    </div>
-                                    {userLocation && (
+                                <button
+                                    type="button"
+                                    onClick={() => setLegendCollapsed(!legendCollapsed)}
+                                    className="flex w-full items-center justify-between text-xs font-medium text-slate-700 hover:text-slate-900 transition-colors"
+                                >
+                                    <span>Legend</span>
+                                    <svg
+                                        className={`h-4 w-4 transition-transform duration-200 ${legendCollapsed ? 'rotate-180' : ''}`}
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                {!legendCollapsed && (
+                                    <div className="mt-2 space-y-1.5">
                                         <div className="flex items-center gap-2">
-                                            <img src="/storage/Hari/haribon-smile.png" alt="Your Location" className="w-6 h-6 rounded-full border-2 border-white object-cover" />
-                                            <span className="text-xs text-slate-600">Your Location</span>
+                                            <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                                            <span className="text-xs text-slate-600">For Sale</span>
                                         </div>
-                                    )}
-                                </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                                            <span className="text-xs text-slate-600">For Rent</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                            <span className="text-xs text-slate-600">For Lease</span>
+                                        </div>
+                                        {userLocation && (
+                                            <div className="flex items-center gap-2">
+                                                <img src="/storage/Hari/haribon-smile.png" alt="Your Location" className="w-6 h-6 rounded-full border-2 border-white object-cover" />
+                                                <span className="text-xs text-slate-600">Your Location</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
+                            </>
+                            )}
                         </div>
 
                         {userLocation && (
@@ -804,6 +875,19 @@ export default function MapPage() {
                                                 </svg>
                                                 {selectedProperty.user.email}
                                             </div>
+                                            {selectedProperty.user.facebook_profile_link && (
+                                                <a
+                                                    href={selectedProperty.user.facebook_profile_link}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="mt-1 flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+                                                >
+                                                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                                    </svg>
+                                                    Facebook Profile
+                                                </a>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

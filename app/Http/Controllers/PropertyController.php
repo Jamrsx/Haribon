@@ -245,6 +245,9 @@ class PropertyController extends Controller
     {
         $query = Property::where('is_active', true)
             ->with(['images', 'location', 'user.subscription.plan'])
+            ->with(['user' => function ($q) {
+                $q->select('id', 'name', 'email', 'profile_picture', 'facebook_profile_link');
+            }])
             ->withCount(['reviews as reviews_count' => function ($query) {
                 $query->where('verified', true);
             }])
@@ -276,6 +279,9 @@ class PropertyController extends Controller
     {
         $query = Property::where('is_active', true)
             ->with(['images', 'location', 'user.subscription.plan'])
+            ->with(['user' => function ($q) {
+                $q->select('id', 'name', 'email', 'profile_picture', 'facebook_profile_link');
+            }])
             ->orderBy('created_at', 'desc');
 
         // Filter by type if provided
@@ -295,6 +301,9 @@ class PropertyController extends Controller
         $query = Property::where('is_active', true)
             ->with(['images', 'location', 'user.subscription.plan', 'user.reviews' => function ($query) {
                 $query->where('verified', true);
+            }])
+            ->with(['user' => function ($q) {
+                $q->select('id', 'name', 'email', 'profile_picture', 'facebook_profile_link');
             }])
             ->orderBy('created_at', 'desc');
 
@@ -325,7 +334,7 @@ class PropertyController extends Controller
             abort(404);
         }
 
-        $property->load(['images', 'location', 'user:id,name,email,profile_picture', 'user.reviews' => function ($query) {
+        $property->load(['images', 'location', 'user:id,name,email,profile_picture,facebook_profile_link', 'user.reviews' => function ($query) {
             $query->where('verified', true);
         }]);
 
