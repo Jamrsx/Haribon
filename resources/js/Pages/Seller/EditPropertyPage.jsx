@@ -4,6 +4,75 @@ import DashboardLayout from '../../Layouts/DashboardLayout';
 import Toast from '../../Components/UI/Toast';
 import MapModal from '../../Components/UI/MapModal';
 
+const COMPRESS_THRESHOLD = 5 * 1024 * 1024; // 5MB - compress anything above this
+
+const compressImage = (file, targetSize = 5 * 1024 * 1024) => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+                
+                const scaleFactor = Math.min(1, Math.sqrt(targetSize / file.size));
+                
+                if (file.size > 20 * 1024 * 1024) {
+                    width *= 0.5;
+                    height *= 0.5;
+                } else if (file.size > 10 * 1024 * 1024) {
+                    width *= 0.7;
+                    height *= 0.7;
+                } else {
+                    width *= scaleFactor;
+                    height *= scaleFactor;
+                }
+                
+                const maxDim = 1600;
+                if (width > maxDim || height > maxDim) {
+                    const ratio = Math.min(maxDim / width, maxDim / height);
+                    width *= ratio;
+                    height *= ratio;
+                }
+                
+                width = Math.round(width);
+                height = Math.round(height);
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, width, height);
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const initialQuality = file.size > 30 * 1024 * 1024 ? 0.6 : 
+                                      file.size > 15 * 1024 * 1024 ? 0.7 : 0.8;
+                
+                canvas.toBlob(
+                    (blob) => {
+                        if (blob) {
+                            const compressedFile = new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), {
+                                type: 'image/jpeg',
+                                lastModified: Date.now(),
+                            });
+                            resolve(compressedFile);
+                        } else {
+                            reject(new Error('Compression failed'));
+                        }
+                    },
+                    'image/jpeg',
+                    initialQuality
+                );
+            };
+            img.onerror = () => reject(new Error('Failed to load image'));
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+    });
+};
+
 export default function EditPropertyPage() {
     const { props } = usePage();
     const property = props.property;
@@ -45,12 +114,51 @@ export default function EditPropertyPage() {
         }
     };
 
-    const handleImageChange = (e) => {
+    const handleImageChange = async (e) => {
         const files = Array.from(e.target.files);
-        setData('images', files);
 
-        const previews = files.map((file) => URL.createObjectURL(file));
-        setImagePreviews(previews);
+        setToast({
+            show: true,
+            type: 'info',
+            message: 'Processing images...'
+        });
+
+        const processedFiles = await Promise.all(
+            files.map(async (file) => {
+                if (file.size > COMPRESS_THRESHOLD) {
+                    try {
+                        const compressed = await compressImage(file);
+                        console.log(`Compressed ${file.name}: ${(file.size / 1024 / 1024).toFixed(2)}MB -> ${(compressed.size / 1024 / 1024).toFixed(2)}MB`);
+                        return compressed;
+                    } catch (err) {
+                        console.error('Compression failed for', file.name, err);
+                        setToast({
+                            show: true,
+                            type: 'error',
+                            message: `Failed to compress ${file.name}`
+                        });
+                        return null;
+                    }
+                }
+                return file;
+            })
+        );
+
+        const validFiles = processedFiles.filter(f => f !== null);
+        
+        if (validFiles.length > 0) {
+            setData('images', validFiles);
+            const previews = validFiles.map((file) => URL.createObjectURL(file));
+            setImagePreviews(previews);
+            
+            const totalOriginal = files.reduce((sum, f) => sum + f.size, 0);
+            const totalCompressed = validFiles.reduce((sum, f) => sum + f.size, 0);
+            setToast({
+                show: true,
+                type: 'success',
+                message: `Processed ${validFiles.length} image(s). Total: ${(totalOriginal / 1024 / 1024).toFixed(1)}MB → ${(totalCompressed / 1024 / 1024).toFixed(1)}MB`
+            });
+        }
     };
 
     const handleDeleteImage = (imageId) => {
@@ -415,7 +523,7 @@ export default function EditPropertyPage() {
                 {/* Images */}
                 <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 className="text-lg font-semibold text-slate-900">Property Images</h2>
-                    <p className="mt-1 text-sm text-slate-600">Upload up to 10 images (max 5MB each)</p>
+                    <p className="mt-1 text-sm text-slate-600">Upload images (auto-compressed to ~5MB if larger). No file size limit.</p>
                     
                     {/* Existing Images */}
                     {existingImages.length > 0 && (
