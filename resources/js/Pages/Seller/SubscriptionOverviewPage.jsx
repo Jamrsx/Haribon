@@ -49,7 +49,12 @@ export default function SubscriptionOverviewPage({ activeSubscription, paymentHi
                                 <div className="mt-4">
                                     <p className="text-xs text-slate-500 uppercase tracking-wide">Valid Until</p>
                                     <p className="mt-1 text-sm font-medium text-slate-700">
-                                        {activeSubscription.plan.duration_days === 0 ? 'Forever' : formatDate(activeSubscription.ended_at)}
+                                        {activeSubscription.plan.duration_days >= 133225
+                                            ? 'January 1, 2200 (Lifetime)'
+                                            : activeSubscription.plan.duration_days === 0
+                                                ? 'Forever'
+                                                : formatDate(activeSubscription.ended_at)
+                                        }
                                     </p>
                                 </div>
                             </div>

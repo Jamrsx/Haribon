@@ -52,8 +52,12 @@ export default function ProfilePage({ user }) {
         const subscription = user.subscription;
         const plan = subscription.plan;
         if (!plan) return false;
-        // Premium if they have an active 1-year subscription (365 days) or lifetime plan
-        return subscription.status === 'active' && (plan.duration_days >= 365 || plan.duration_days === 0);
+        // Premium if they have an active paid yearly subscription (365-133224 days)
+        // Lifetime plans (133225+ days) get lifetime badges instead
+        // Exclude free plans (price = 0) from premium status
+        const isPaidPlan = plan.price > 0;
+        const isYearlyPlan = plan.duration_days >= 365 && plan.duration_days < 133225;
+        return subscription.status === 'active' && isPaidPlan && isYearlyPlan;
     }, [user?.subscription]);
 
     const isLifetime = useMemo(() => {
@@ -61,8 +65,10 @@ export default function ProfilePage({ user }) {
         const subscription = user.subscription;
         const plan = subscription.plan;
         if (!plan) return false;
-        // Lifetime if they have an active lifetime subscription (9999 days or 0 for lifetime)
-        return subscription.status === 'active' && (plan.duration_days >= 9999 || plan.duration_days === 0);
+        // Lifetime if they have an active lifetime subscription (133225 days or 0 days with non-zero price)
+        // Exclude free plans (price = 0) from lifetime status
+        const isActualLifetime = plan.duration_days >= 133225 || (plan.duration_days === 0 && plan.price > 0);
+        return subscription.status === 'active' && isActualLifetime;
     }, [user?.subscription]);
 
     const handleProfilePictureChange = (e) => {
