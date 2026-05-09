@@ -122,11 +122,36 @@ Route::get('/reviews/verify/{token}', [ReviewController::class, 'verify'])->name
 Route::get('/sellers/{seller}/reviews', [ReviewController::class, 'index'])->name('reviews.index');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
-    Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
+    // Buyer-namespaced messaging URLs (consistent with /buyer/* dashboard links).
+    Route::get('/buyer/messages', [MessageController::class, 'index'])->name('buyer.messages.index');
+    Route::get('/buyer/messages/{conversation}', [MessageController::class, 'show'])->name('buyer.messages.show');
+
+    // Seller-namespaced messaging URLs (consistent with /seller/* dashboard links).
+    Route::get('/seller/messages', [MessageController::class, 'index'])->name('seller.messages.index');
+    Route::get('/seller/messages/{conversation}', [MessageController::class, 'show'])->name('seller.messages.show');
+
+    // Shared write/API endpoints — same regardless of role.
     Route::post('/messages/{conversation}/send', [MessageController::class, 'send'])->name('messages.send');
     Route::post('/properties/{property}/inquire', [MessageController::class, 'inquire'])->name('messages.inquire');
     Route::get('/api/messages/poll', [MessageController::class, 'pollList'])->name('messages.poll.list');
     Route::get('/api/messages/{conversation}/poll', [MessageController::class, 'poll'])->name('messages.poll.thread');
     Route::post('/api/messages/{conversation}/typing', [MessageController::class, 'typing'])->name('messages.typing');
+
+    // Legacy `/messages*` URLs — redirect to the role-appropriate namespace so old links keep working.
+    Route::get('/messages', function () {
+        $user = auth()->user();
+        $isSeller = $user && $user->roles()->where('name', 'seller')->exists();
+
+        return redirect()->route($isSeller ? 'seller.messages.index' : 'buyer.messages.index');
+    })->name('messages.index');
+
+    Route::get('/messages/{conversation}', function (\App\Models\Conversation $conversation) {
+        $user = auth()->user();
+        $isSeller = $user && $conversation->seller_id === $user->id;
+
+        return redirect()->route(
+            $isSeller ? 'seller.messages.show' : 'buyer.messages.show',
+            $conversation
+        );
+    })->name('messages.show');
 });

@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import DashboardLayout from '../../Layouts/DashboardLayout';
-import MainLayout from '../../Layouts/MainLayout';
 
 const formatPrice = (price) => {
     return new Intl.NumberFormat('en-PH', {
@@ -68,8 +67,9 @@ const getTypeLabel = (type) => {
 
 export default function MessagesPage({ conversations: initialConversations, activeConversation: initialActive, currentUserId }) {
     const { props } = usePage();
-    const isSeller = (props.auth?.user?.roles ?? []).includes('seller');
-    const Layout = isSeller ? DashboardLayout : MainLayout;
+    const userRoles = props.auth?.user?.roles ?? [];
+    const isSeller = userRoles.includes('seller');
+    const layoutRole = isSeller ? 'seller' : 'buyer';
     const [conversations, setConversations] = useState(initialConversations ?? []);
     const [active, setActive] = useState(initialActive ?? null);
     const [messages, setMessages] = useState(initialActive?.messages ?? []);
@@ -213,7 +213,8 @@ export default function MessagesPage({ conversations: initialConversations, acti
 
     const handleSelect = (conversation) => {
         setShowThreadOnMobile(true);
-        router.visit(`/messages/${conversation.id}`, {
+        const base = isSeller ? '/seller/messages' : '/buyer/messages';
+        router.visit(`${base}/${conversation.id}`, {
             preserveScroll: false,
             only: ['conversations', 'activeConversation', 'auth'],
         });
@@ -225,10 +226,10 @@ export default function MessagesPage({ conversations: initialConversations, acti
     };
 
     return (
-        <Layout title="Messages | Haribon">
+        <DashboardLayout title="Messages | Haribon" role={layoutRole}>
             <Head title="Messages | Haribon" />
 
-            <div className={isSeller ? 'mb-4' : 'mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8'}>
+            <div className="mb-4">
                 <div className="mb-4">
                     <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Messages</h1>
                     <p className="text-sm text-slate-500">Conversations between you and buyers/sellers about properties.</p>
@@ -468,6 +469,6 @@ export default function MessagesPage({ conversations: initialConversations, acti
                 </div>
             </div>
             </div>
-        </Layout>
+        </DashboardLayout>
     );
 }

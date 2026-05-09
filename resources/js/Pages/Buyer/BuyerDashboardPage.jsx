@@ -143,7 +143,7 @@ export default function BuyerDashboardPage({ stats: initialStats, recent_favorit
                     title="Conversations"
                     value={stats?.conversations_count ?? 0}
                     accent="bg-emerald-50"
-                    href="/messages"
+                    href="/buyer/messages"
                     icon={
                         <svg className="h-6 w-6 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
@@ -154,7 +154,7 @@ export default function BuyerDashboardPage({ stats: initialStats, recent_favorit
                     title="Unread Messages"
                     value={stats?.unread_count ?? 0}
                     accent="bg-amber-50"
-                    href="/messages"
+                    href="/buyer/messages"
                     icon={
                         <svg className="h-6 w-6 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l9 6 9-6M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -250,7 +250,7 @@ export default function BuyerDashboardPage({ stats: initialStats, recent_favorit
                             <h2 className="text-sm font-semibold text-slate-900">Recent Conversations</h2>
                             <p className="text-xs text-slate-500">Latest messages with sellers.</p>
                         </div>
-                        <Link href="/messages" className="text-xs font-medium text-emerald-700 hover:underline">
+                        <Link href="/buyer/messages" className="text-xs font-medium text-emerald-700 hover:underline">
                             View all →
                         </Link>
                     </header>
@@ -271,7 +271,7 @@ export default function BuyerDashboardPage({ stats: initialStats, recent_favorit
                                 return (
                                     <Link
                                         key={c.id}
-                                        href={`/messages/${c.id}`}
+                                        href={`/buyer/messages/${c.id}`}
                                         className={`flex items-center gap-3 px-5 py-3 transition hover:bg-slate-50 ${
                                             hasUnread ? 'bg-rose-50/40' : ''
                                         }`}

@@ -145,8 +145,9 @@ class MessageController extends Controller
             'conversation_id' => $conversation->id,
         ]);
 
+        // The inquirer is always a buyer, so route to the buyer-namespaced URL.
         return redirect()
-            ->route('messages.show', $conversation)
+            ->route('buyer.messages.show', $conversation)
             ->with('success', 'Your inquiry has been sent.');
     }
 
