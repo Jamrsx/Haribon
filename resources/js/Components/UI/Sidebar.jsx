@@ -1,5 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
+
+const messagesNavItem = {
+    href: '/messages',
+    label: 'Messages',
+    showBadge: true,
+    icon: (
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+        </svg>
+    ),
+};
 
 const sellerNavItems = [
     {
@@ -25,6 +36,7 @@ const sellerNavItems = [
             </svg>
         ),
     },
+    messagesNavItem,
     {
         href: '/seller/properties/create',
         label: 'Create Property',
@@ -56,7 +68,53 @@ const sellerNavItems = [
     },
 ];
 
-export default function Sidebar({ collapsed, onToggle }) {
+const buyerNavItems = [
+    {
+        href: '/buyer/dashboard',
+        label: 'Dashboard',
+        icon: (
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="8" height="8" rx="1" />
+                <rect x="13" y="3" width="8" height="5" rx="1" />
+                <rect x="13" y="10" width="8" height="11" rx="1" />
+                <rect x="3" y="13" width="8" height="8" rx="1" />
+            </svg>
+        ),
+    },
+    {
+        href: '/buyer/properties',
+        label: 'Browse Properties',
+        icon: (
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M21 21l-4.3-4.3" />
+            </svg>
+        ),
+    },
+    {
+        href: '/buyer/map',
+        label: 'Map View',
+        icon: (
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 20l-6-3V5l6 3 6-3 6 3v12l-6-3-6 3z" />
+                <path d="M9 8v12" />
+                <path d="M15 5v12" />
+            </svg>
+        ),
+    },
+    {
+        href: '/buyer/favorites',
+        label: 'Favorites',
+        icon: (
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+        ),
+    },
+    messagesNavItem,
+];
+
+export default function Sidebar({ collapsed, onToggle, role }) {
     const page = usePage();
     const currentUrl = page.url ?? '';
     const auth = page.props?.auth;
@@ -65,13 +123,54 @@ export default function Sidebar({ collapsed, onToggle }) {
     const user = auth?.user;
     const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
     const currentPath = currentUrl.split('?')[0] || '';
-    const activeItem = sellerNavItems
+
+    const userRoles = user?.roles ?? [];
+    const resolvedRole = role ?? (userRoles.includes('seller') ? 'seller' : 'buyer');
+    const navItems = resolvedRole === 'buyer' ? buyerNavItems : sellerNavItems;
+    const panelLabel = resolvedRole === 'buyer' ? 'Buyer Panel' : 'Seller Panel';
+
+    const activeItem = navItems
         .filter((item) => currentPath === item.href || currentPath.startsWith(`${item.href}/`))
         .sort((a, b) => b.href.length - a.href.length)[0];
     const activeHref = activeItem?.href ?? '';
 
     const isPremium = user?.subscription?.plan?.duration_days >= 365 && user?.subscription?.status === 'active';
     const isLifetime = user?.subscription?.plan?.duration_days >= 9999 && user?.subscription?.status === 'active';
+
+    const [unreadCount, setUnreadCount] = useState(user?.unread_messages_count ?? 0);
+
+    useEffect(() => {
+        setUnreadCount(user?.unread_messages_count ?? 0);
+    }, [user?.unread_messages_count]);
+
+    useEffect(() => {
+        if (!user) return undefined;
+
+        let timerId;
+        const tick = async () => {
+            if (typeof document !== 'undefined' && document.hidden) {
+                return;
+            }
+            try {
+                const res = await fetch('/api/messages/poll', {
+                    headers: { Accept: 'application/json' },
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                setUnreadCount(data.unread_count ?? 0);
+                console.log('[Sidebar] unread poll:', data.unread_count);
+            } catch (error) {
+                console.warn('[Sidebar] unread poll failed', error);
+            }
+        };
+
+        // Run once immediately so a fresh page load shows the latest count
+        // without waiting for the first interval tick.
+        tick();
+        timerId = setInterval(tick, 10000);
+        return () => clearInterval(timerId);
+    }, [user?.id]);
 
     return (
         <aside
@@ -83,7 +182,7 @@ export default function Sidebar({ collapsed, onToggle }) {
                 <div className={`flex h-16 items-center border-b border-slate-700 ${collapsed ? 'justify-center px-2' : 'justify-between px-5'}`}>
                     {!collapsed ? (
                         <div>
-                            <p className="text-sm font-semibold text-white">Seller Panel</p>
+                            <p className="text-sm font-semibold text-white">{panelLabel}</p>
                             <p className="text-xs text-slate-300">Haribon Marketplace</p>
                         </div>
                     ) : null}
@@ -101,8 +200,9 @@ export default function Sidebar({ collapsed, onToggle }) {
                 </div>
 
                 <nav className="space-y-1 px-2 py-4">
-                    {sellerNavItems.map((item) => {
+                    {navItems.map((item) => {
                         const isActive = activeHref === item.href;
+                        const showUnread = item.showBadge && unreadCount > 0;
 
                         return (
                             <Link
@@ -116,8 +216,24 @@ export default function Sidebar({ collapsed, onToggle }) {
                                 title={item.label}
                             >
                                 <span className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2.5'}`}>
-                                    {item.icon}
-                                    {!collapsed ? <span>{item.label}</span> : null}
+                                    <span className="relative inline-flex">
+                                        {item.icon}
+                                        {showUnread && collapsed ? (
+                                            <span className="absolute -right-1.5 -top-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white">
+                                                {unreadCount > 99 ? '99+' : unreadCount}
+                                            </span>
+                                        ) : null}
+                                    </span>
+                                    {!collapsed ? (
+                                        <span className="flex flex-1 items-center justify-between gap-2">
+                                            <span>{item.label}</span>
+                                            {showUnread ? (
+                                                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[11px] font-semibold text-white">
+                                                    {unreadCount > 99 ? '99+' : unreadCount}
+                                                </span>
+                                            ) : null}
+                                        </span>
+                                    ) : null}
                                 </span>
                             </Link>
                         );

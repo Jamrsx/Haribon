@@ -25,13 +25,17 @@ function EyeIcon({ open }) {
 
 export default function RegisterPage() {
     const { flash } = usePage().props;
+    const initialRole = (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('role')) === 'seller'
+        ? 'seller'
+        : 'buyer';
+
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         email: '',
         phone: '',
         password: '',
         password_confirmation: '',
-        role: 'seller',
+        role: initialRole,
     });
     const [toast, setToast] = useState({
         show: false,
@@ -123,8 +127,19 @@ export default function RegisterPage() {
         });
     };
 
+    const isSeller = data.role === 'seller';
+    const subtitle = isSeller
+        ? 'Register as a seller to start listing your properties.'
+        : 'Register as a buyer to inquire and message sellers about properties.';
+
+    const handleRoleChange = (role) => {
+        if (data.role === role) return;
+        console.log('[Register] role switched to', role);
+        setData('role', role);
+    };
+
     return (
-        <AuthLayout title="Create your account" subtitle="Register as a seller to start listing your properties.">
+        <AuthLayout title="Create your account" subtitle={subtitle}>
             <Head title="Register" />
             <Toast
                 show={toast.show}
@@ -133,22 +148,88 @@ export default function RegisterPage() {
                 onClose={() => setToast((prev) => ({ ...prev, show: false }))}
             />
 
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 mb-6">
-                <div className="flex items-start gap-3">
-                    <svg className="mt-0.5 h-5 w-5 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div>
-                        <p className="text-sm font-medium text-blue-900">Seller Account Benefits</p>
-                        <p className="mt-1 text-sm text-blue-800">
-                            Start with 1 free property listing. Upgrade to 6 months (10 listings), 1 year (20 listings), or lifetime (unlimited listings) for more features.
-                        </p>
-                        <p className="mt-2 text-xs text-blue-700">
-                            Your subscription helps support the developers and pay for the infrastructure. You can still use the platform freely with 1 listing.
-                        </p>
+            <div className="mb-6">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">I want to register as</p>
+                <div
+                    role="radiogroup"
+                    aria-label="Account type"
+                    className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1"
+                >
+                    <button
+                        type="button"
+                        role="radio"
+                        aria-checked={!isSeller}
+                        onClick={() => handleRoleChange('buyer')}
+                        className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
+                            !isSeller
+                                ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-200'
+                                : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                    >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Buyer
+                    </button>
+                    <button
+                        type="button"
+                        role="radio"
+                        aria-checked={isSeller}
+                        onClick={() => handleRoleChange('seller')}
+                        className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
+                            isSeller
+                                ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-200'
+                                : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                    >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6" />
+                        </svg>
+                        Seller
+                    </button>
+                </div>
+                <p className="mt-2 text-[11px] text-slate-500">
+                    {isSeller
+                        ? 'You can list properties and receive inquiries from buyers.'
+                        : 'You can browse listings, save favorites, and message sellers.'}
+                </p>
+            </div>
+
+            {isSeller ? (
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 mb-6">
+                    <div className="flex items-start gap-3">
+                        <svg className="mt-0.5 h-5 w-5 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                            <p className="text-sm font-medium text-blue-900">Seller Account Benefits</p>
+                            <p className="mt-1 text-sm text-blue-800">
+                                Start with 1 free property listing. Upgrade to 6 months (10 listings), 1 year (20 listings), or lifetime (unlimited listings) for more features.
+                            </p>
+                            <p className="mt-2 text-xs text-blue-700">
+                                Your subscription helps support the developers and pay for the infrastructure. You can still use the platform freely with 1 listing.
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            ) : (
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 mb-6">
+                    <div className="flex items-start gap-3">
+                        <svg className="mt-0.5 h-5 w-5 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <div>
+                            <p className="text-sm font-medium text-emerald-900">Buyer Account Benefits</p>
+                            <p className="mt-1 text-sm text-emerald-800">
+                                Browse all properties freely, save your favorites, and chat directly with sellers about listings you're interested in.
+                            </p>
+                            <p className="mt-2 text-xs text-emerald-700">
+                                Buyer accounts are free — there are no listing limits or subscriptions to worry about.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -291,7 +372,7 @@ export default function RegisterPage() {
                     disabled={processing}
                     className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                    {processing ? 'Creating account...' : 'Create Account'}
+                    {processing ? 'Creating account...' : `Create ${isSeller ? 'Seller' : 'Buyer'} Account`}
                 </button>
 
                 <p className="text-center text-sm text-slate-600">

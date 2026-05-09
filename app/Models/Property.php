@@ -55,4 +55,9 @@ class Property extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+    public function favoritedBy()
+    {
+        return $this->belongsToMany(User::class, 'property_favorites')->withTimestamps();
+    }
 }

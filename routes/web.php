@@ -5,7 +5,10 @@ use App\Http\Controllers\Auth\LoginUserController;
 use App\Http\Controllers\Auth\LogoutUserController;
 use App\Http\Controllers\Auth\RegisterUserController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\BuyerController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PropertyController;
@@ -106,10 +109,24 @@ Route::get('/seller/subscription/success', function () {
 Route::post('/api/paymongo/webhook', [WebhookController::class, 'handle'])
     ->name('paymongo.webhook');
 
-Route::get('/buyer/favorites', function () {
-    return Inertia::render('Buyer/FavoritePropertiesPage');
-})->middleware('auth')->name('buyer.favorites');
+Route::middleware('auth')->group(function () {
+    Route::get('/buyer/dashboard', [BuyerController::class, 'dashboard'])->name('buyer.dashboard');
+    Route::get('/buyer/properties', [BuyerController::class, 'properties'])->name('buyer.properties');
+    Route::get('/buyer/map', [BuyerController::class, 'map'])->name('buyer.map');
+    Route::get('/buyer/favorites', [BuyerController::class, 'favorites'])->name('buyer.favorites');
+    Route::post('/properties/{property}/favorite', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
+});
 
 Route::post('/properties/{property}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 Route::get('/reviews/verify/{token}', [ReviewController::class, 'verify'])->name('reviews.verify');
 Route::get('/sellers/{seller}/reviews', [ReviewController::class, 'index'])->name('reviews.index');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+    Route::get('/messages/{conversation}', [MessageController::class, 'show'])->name('messages.show');
+    Route::post('/messages/{conversation}/send', [MessageController::class, 'send'])->name('messages.send');
+    Route::post('/properties/{property}/inquire', [MessageController::class, 'inquire'])->name('messages.inquire');
+    Route::get('/api/messages/poll', [MessageController::class, 'pollList'])->name('messages.poll.list');
+    Route::get('/api/messages/{conversation}/poll', [MessageController::class, 'poll'])->name('messages.poll.thread');
+    Route::post('/api/messages/{conversation}/typing', [MessageController::class, 'typing'])->name('messages.typing');
+});

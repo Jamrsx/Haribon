@@ -307,8 +307,13 @@ class PropertyController extends Controller
 
         $properties = $query->paginate(8);
 
+        $favoriteIds = $request->user()
+            ? $request->user()->favorites()->pluck('properties.id')->all()
+            : [];
+
         return inertia('Public/AllListingsPage', [
             'properties' => $properties,
+            'favorite_ids' => $favoriteIds,
         ]);
     }
 
@@ -362,11 +367,16 @@ class PropertyController extends Controller
         $averageRating = $property->reviews()->where('verified', true)->avg('rating') ?? 0;
         $totalReviews = $property->reviews()->where('verified', true)->count();
 
+        $isFavorited = $request->user()
+            ? $request->user()->hasFavorited($property)
+            : false;
+
         return inertia('Public/PropertyDetailsPage', [
             'property' => $property,
             'reviews' => $reviews,
             'averageRating' => round($averageRating, 1),
             'totalReviews' => $totalReviews,
+            'is_favorited' => $isFavorited,
         ]);
     }
 

@@ -46,6 +46,7 @@ class HandleInertiaRequests extends Middleware
                             'email' => $request->user()->email,
                             'phone' => $request->user()->phone,
                             'roles' => $request->user()->roles()->pluck('name')->values()->all(),
+                            'unread_messages_count' => $request->user()->unreadMessagesCount(),
                         ],
                         $request->user()->subscription ? [
                             'subscription' => [

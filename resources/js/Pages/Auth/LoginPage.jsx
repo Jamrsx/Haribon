@@ -24,10 +24,14 @@ function EyeIcon({ open }) {
 }
 
 export default function LoginPage() {
+    const redirectTarget = typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('redirect') ?? ''
+        : '';
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
         remember: false,
+        redirect: redirectTarget,
     });
     const [showPassword, setShowPassword] = useState(false);
     const [toast, setToast] = useState({
@@ -139,7 +143,10 @@ export default function LoginPage() {
                     </p>
                     <p className="text-center text-sm text-slate-600">
                         No account yet?{' '}
-                        <Link href="/register" className="font-semibold text-emerald-700 hover:text-emerald-800">
+                        <Link
+                            href={`/register?role=buyer${redirectTarget ? `&redirect=${encodeURIComponent(redirectTarget)}` : ''}`}
+                            className="font-semibold text-emerald-700 hover:text-emerald-800"
+                        >
                             Register
                         </Link>
                     </p>

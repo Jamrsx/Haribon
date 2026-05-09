@@ -39,10 +39,15 @@ class LoginUserController extends Controller
             ]);
         }
 
+        $redirect = $request->input('redirect');
+        if (is_string($redirect) && str_starts_with($redirect, '/') && ! str_starts_with($redirect, '//')) {
+            return redirect($redirect)->with('loginSuccess', $user->name);
+        }
+
         if ($isSeller) {
             return redirect()->route('seller.dashboard')->with('loginSuccess', $user->name);
         }
 
-        return redirect()->route('buyer.favorites')->with('loginSuccess', $user->name);
+        return redirect()->route('buyer.dashboard')->with('loginSuccess', $user->name);
     }
 }

@@ -84,4 +84,35 @@ class User extends Authenticatable
     {
         return $this->reviews()->where('verified', true)->avg('rating') ?? 0.0;
     }
+
+    public function conversationsAsBuyer(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'buyer_id');
+    }
+
+    public function conversationsAsSeller(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'seller_id');
+    }
+
+    public function favorites(): BelongsToMany
+    {
+        return $this->belongsToMany(Property::class, 'property_favorites')->withTimestamps();
+    }
+
+    public function hasFavorited(Property $property): bool
+    {
+        return $this->favorites()->where('properties.id', $property->id)->exists();
+    }
+
+    public function unreadMessagesCount(): int
+    {
+        return Message::whereNull('read_at')
+            ->where('sender_id', '!=', $this->id)
+            ->whereHas('conversation', function ($query) {
+                $query->where('buyer_id', $this->id)
+                    ->orWhere('seller_id', $this->id);
+            })
+            ->count();
+    }
 }

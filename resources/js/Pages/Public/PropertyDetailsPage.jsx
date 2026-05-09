@@ -1,13 +1,27 @@
 import React, { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import Header from '../../Components/UI/Header';
 import Footer from '../../Components/UI/Footer';
+import InquiryModal from '../../Components/UI/InquiryModal';
+import FavoriteButton from '../../Components/UI/FavoriteButton';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function PropertyDetailsPage({ property, reviews, averageRating, totalReviews }) {
+export default function PropertyDetailsPage({ property, reviews, averageRating, totalReviews, is_favorited: isFavoritedInitial = false }) {
+    const { auth } = usePage().props;
     const [rating, setRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+    const [showInquiryModal, setShowInquiryModal] = useState(false);
+
+    const isOwnProperty = auth?.user?.id && property?.user?.id && auth.user.id === property.user.id;
+
+    const handleOpenInquiry = () => {
+        if (!auth?.user) {
+            window.location.href = `/register?role=buyer&redirect=/properties/${property.id}`;
+            return;
+        }
+        setShowInquiryModal(true);
+    };
 
     const { data, setData, post, processing, errors, recentlySuccessful } = useForm({
         email: '',
@@ -119,9 +133,21 @@ export default function PropertyDetailsPage({ property, reviews, averageRating, 
                             </div>
 
                             <div className="space-y-4 p-5 sm:p-6">
-                                <h1 className="text-2xl font-bold text-slate-900">
-                                    {property?.title ?? 'Property'}
-                                </h1>
+                                <div className="flex items-start justify-between gap-3">
+                                    <h1 className="text-2xl font-bold text-slate-900">
+                                        {property?.title ?? 'Property'}
+                                    </h1>
+                                    {!isOwnProperty && property?.id ? (
+                                        <FavoriteButton
+                                            propertyId={property.id}
+                                            initialFavorited={isFavoritedInitial}
+                                            size="md"
+                                            variant="inline"
+                                            label
+                                            className="flex-shrink-0"
+                                        />
+                                    ) : null}
+                                </div>
 
                                 <p className="text-2xl font-bold text-emerald-700">
                                     {formatPrice(property?.price_total)}
@@ -195,11 +221,30 @@ export default function PropertyDetailsPage({ property, reviews, averageRating, 
                                                 )}
                                             </div>
                                         </div>
+
+                                        {!isOwnProperty && (
+                                            <button
+                                                type="button"
+                                                onClick={handleOpenInquiry}
+                                                className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-700"
+                                            >
+                                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                                                </svg>
+                                                Message Seller
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </div>
                         </div>
                     </div>
+
+                    <InquiryModal
+                        show={showInquiryModal}
+                        onClose={() => setShowInquiryModal(false)}
+                        property={property}
+                    />
 
                     {reviews && reviews.data && reviews.data.length > 0 && (
                         <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
